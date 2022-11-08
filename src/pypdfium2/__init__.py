@@ -7,6 +7,6 @@ from pypdfium2._namespace import *
 
 logger = logging.getLogger(__name__)
 
-# Note: PDFium developers plan changes to the initialisation API
+# Note: PDFium developers plan changes to the initialisation API (see https://crbug.com/pdfium/1446)
 FPDF_InitLibrary()
 atexit.register(FPDF_DestroyLibrary)

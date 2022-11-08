@@ -3,6 +3,8 @@
 
 # pypdfium2
 
+[![Downloads](https://pepy.tech/badge/pypdfium2/month)](https://pepy.tech/project/pypdfium2)
+
 [pypdfium2](https://github.com/pypdfium2-team/pypdfium2) is an ABI-level Python 3 binding to [PDFium](https://pdfium.googlesource.com/pdfium/+/refs/heads/main), a powerful and liberal-licensed library for PDF creation, inspection, manipulation and rendering.
 
 The project is built using [ctypesgen](https://github.com/ctypesgen/ctypesgen) and external [PDFium binaries](https://github.com/bblanchon/pdfium-binaries/).
@@ -76,13 +78,13 @@ However, some optional support model features require additional packages:
 * [`Pillow`](https://pillow.readthedocs.io/en/stable/) (module name `PIL`) is a highly pouplar imaging library for Python.
   pypdfium2 provides convenience methods to directly return PIL image objects when dealing with raster graphics.
 * [`NumPy`](https://numpy.org/doc/stable/index.html) is a library for scientific computing. Similar to `Pillow`, pypdfium2 provides helpers to get raster graphics in the form of multidimensional numpy arrays.
-* [`uharfbuzz`](https://github.com/harfbuzz/uharfbuzz) is a text shaping engine used by text insertion helpers, to support foreign writing systems.
-  If you do not care about this, you may insert text using the raw PDFium functions `FPDFPageObj_NewTextObj()` (or `FPDFPageObj_CreateTextObj()`) and `FPDFText_SetText()` without being dependent on uharfbuzz.
 
 
 ## Usage
 
 ### [Support model](https://pypdfium2.readthedocs.io/en/stable/python_api.html)
+
+<!-- TODO demonstrate more APIs (e. g. XObject placement, transform matrices, image extraction, ...) -->
 
 Here are some examples of using the support model API.
 
@@ -101,8 +103,8 @@ Here are some examples of using the support model API.
 * Render multiple pages concurrently
   ```python
   page_indices = [i for i in range(n_pages)]  # all pages
-  renderer = pdf.render_to(
-      pdfium.BitmapConv.pil_image,
+  renderer = pdf.render(
+      pdfium.PdfBitmap.to_pil,
       page_indices = page_indices,
       scale = 300/72,  # 300dpi resolution
   )
@@ -152,29 +154,13 @@ Here are some examples of using the support model API.
 
 * Render a single page
   ```python
-  image = page.render_to(
-      pdfium.BitmapConv.pil_image,
-      scale = 1,                           # 72dpi resolution
-      rotation = 0,                        # no additional rotation
-      crop = (0, 0, 0, 0),                 # no crop (form: left, right, bottom, top)
-      greyscale = False,                   # coloured output
-      fill_colour = (255, 255, 255, 255),  # fill bitmap with white background before rendering (form: RGBA)
-      colour_scheme = None,                # no custom colour scheme
-      optimise_mode = OptimiseMode.NONE,   # no optimisations (e. g. subpixel rendering)
-      draw_annots = True,                  # show annotations
-      draw_forms = True,                   # show forms
-      no_smoothtext = False,               # anti-alias text
-      no_smoothimage = False,              # anti-alias images
-      no_smoothpath = False,               # anti-alias paths
-      force_halftone = False,              # don't force halftone for image stretching
-      rev_byteorder = False,               # don't reverse byte order
-      prefer_bgrx = False,                 # don't prefer four channels for coloured output
-      force_bitmap_format = None,          # don't force a specific bitmap format
-      extra_flags = 0,                     # no extra flags
-      allocator = None,                    # no custom allocator
-      memory_limit = 2**30,                # maximum allocation (1 GiB)
+  bitmap = page.render(
+      scale = 1,    # 72dpi resolution
+      rotation = 0, # no additional rotation
+      # ... further rendering options
   )
-  image.show()
+  pil_image = bitmap.to_pil()
+  pil_image.show()
   ```
 
 * Extract and search text
@@ -187,21 +173,10 @@ Here are some examples of using the support model API.
   # Extract text from a specific rectangular area
   text_part = textpage.get_text_bounded(left=50, bottom=100, right=width-50, top=height-100)
   
-  # Extract URLs from the page
-  links = [l for l in textpage.get_links()]
-  
   # Locate text on the page
   searcher = textpage.search("something", match_case=False, match_whole_word=False)
   # This will be a list of bounding boxes of the form (left, right, bottom, top)
   first_occurrence = searcher.get_next()
-  ```
-
-* Finished objects may be closed explicitly to release memory allocated by PDFium.
-  Otherwise, they will be finalised automatically on garbage collection.
-  ```python
-  # Attention: objects must be closed in correct order!
-  for garbage in (searcher, textpage, page, pdf):
-      garbage.close()
   ```
 
 * Create a new PDF with an empty A4 sized page
@@ -211,38 +186,19 @@ Here are some examples of using the support model API.
   page_a = pdf.new_page(width, height)
   ```
 
-* Insert text content
-  ```python
-  NotoSans = "./tests/resources/NotoSans-Regular.ttf"
-  hb_font = pdfium.HarfbuzzFont(NotoSans)
-  pdf_font = pdf.add_font(
-      NotoSans,
-      type = pdfium.FPDF_FONT_TRUETYPE,
-      is_cid = True,
-  )
-  page_a.insert_text(
-      text = "मैं घोषणा, पुष्टि और सहमत हूँ कि:",
-      pos_x = 50,
-      pos_y = height - 75,
-      font_size = 25,
-      hb_font = hb_font,
-      pdf_font = pdf_font,
-  )
-  page_a.generate_content()
-  ```
-
-* Add a JPEG image on a second page
+* Include a JPEG image in a PDF
   ```python
   pdf = pdfium.PdfDocument.new()
-
-  image = pdfium.PdfImageObject.new(pdf)
+  
+  image = pdfium.PdfImage.new(pdf)
   buffer = open("./tests/resources/mona_lisa.jpg", "rb")
-  width, height = image.load_jpeg(buffer, autoclose=True)
-
+  image.load_jpeg(buffer, autoclose=True)
+  width, height = image.get_size()
+  
   matrix = pdfium.PdfMatrix()
   matrix.scale(width, height)
   image.set_matrix(matrix)
-
+  
   page = pdf.new_page(width, height)
   page.insert_object(image)
   page.generate_content()
@@ -272,6 +228,8 @@ A large variety of examples on how to interface with the raw API using [`ctypes`
 Nonetheless, the following guide may be helpful to get started with the raw API, especially for developers who are not familiar with `ctypes` yet.
 
 [^pdfium_docs]: Unfortunately, no recent HTML-rendered documentation is available for PDFium at the moment. While large parts of the old [Foxit docs](https://developers.foxit.com/resources/pdf-sdk/c_api_reference_pdfium/group___f_p_d_f_i_u_m.html) still seem similar to PDFium's current API, many modifications and new functions are actually missing, which can be confusing.
+
+<!-- TODO write something about weakref.finalize(); add example on creating a C page array -->
 
 * In general, PDFium functions can be called just like normal Python functions.
   However, parameters may only be passed positionally, i. e. it is not possible to use keyword arguments.
@@ -495,7 +453,7 @@ Nonetheless, the following guide may be helpful to get started with the raw API,
   
   [^ctypes_no_oor]: Confer the [ctypes documentation on Pointers](https://docs.python.org/3/library/ctypes.html#pointers).
 
-* Finally, let's finish this guide with an example on how to render the first page of a document to a `PIL` image in `RGBA` colour format.
+* Finally, let's finish this guide with an example on how to render the first page of a document to a `PIL` image in `RGBA` color format.
   ```python
   import math
   import ctypes
@@ -520,7 +478,7 @@ Nonetheless, the following guide may be helpful to get started with the raw API,
   use_alpha = False  # We don't render with transparent background
   bitmap = pdfium.FPDFBitmap_Create(width, height, int(use_alpha))
   # Fill the whole bitmap with a white background
-  # The colour is given as a 32-bit integer in ARGB format (8 bits per channel)
+  # The color is given as a 32-bit integer in ARGB format (8 bits per channel)
   pdfium.FPDFBitmap_FillRect(bitmap, 0, 0, width, height, 0xFFFFFFFF)
   
   # Store common rendering arguments
@@ -619,9 +577,11 @@ If the timeframe between reaching reference count zero and removal is sufficient
 
 Although great care has been taken while developing the support model, it cannot be fully excluded that unknown object lifetime violations are still lurking around somewhere, especially if unexpected requirements were not documented by the time the code was written.
 
-#### No direct access to PDF data structures
+#### No direct access to raw PDF data structure
 
-It should be noted that PDFium, unlike many other PDF libraries, is currently not providing direct access to raw PDF data structures. It does not publicly expose APIs to read/write PDF dictionaries, name trees, etc. Instead, it merely offers a variety of higher-level functions to modify PDFs. While these are certainly useful to abstract away some of the format's complexity and to avoid the creation of invalid PDFs, the fact that universal instruments for low-level access are largely missing in the public API does considerably limit the library's potential. If PDFium's capabilities are not sufficient for your use case, or you just wish to work with the raw PDF structure on your own, you may want to consider other products such as [`pikepdf`](https://github.com/pikepdf/pikepdf) to use instead of, or in conjunction with, pypdfium2.
+<!-- https://crbug.com/pdfium/1694 -->
+
+PDFium does not currently provide direct access to the raw PDF data structure. It does not publicly expose APIs to read/write PDF dictionaries, name trees, etc. Instead, it merely offers a variety of higher-level functions to modify PDFs. While these are certainly useful to abstract some of the format's complexity and avoid the creation of invalid PDFs, the lack of public instruments for raw access considerably limits the library's potential. If PDFium's capabilities are not sufficient for your use case, or you just wish to work with the raw PDF structure on your own, you may want to consider other products such as [`pikepdf`](https://github.com/pikepdf/pikepdf) to use instead of, or in conjunction with, pypdfium2.
 
 
 ## Development
@@ -632,14 +592,20 @@ This section contains some key information relevant for project maintainers.
 
 ### Documentation
 
-pypdfium2 provides API documentation using [sphinx](https://github.com/sphinx-doc/sphinx/). It may be rendered to various formats, including HTML:
+pypdfium2 provides API documentation using [Sphinx](https://github.com/sphinx-doc/sphinx/). It can be rendered to various formats, including HTML:
 ```bash
 sphinx-build -b html ./docs/source ./docs/build/html/
 ```
 
-Built documentation is hosted on [`readthedocs.org`](https://readthedocs.org/projects/pypdfium2/).
-It is primarily configured using a [`.readthedocs.yaml`](.readthedocs.yaml) file (see the [instructions](https://docs.readthedocs.io/en/stable/config-file/v2.html)).
-The web interface also provides an administration page for maintainers.
+Built documentation is primarily hosted on [`readthedocs.org`](https://readthedocs.org/projects/pypdfium2/).
+It may be configured using a [`.readthedocs.yaml`](.readthedocs.yaml) file (see [instructions](https://docs.readthedocs.io/en/stable/config-file/v2.html)), and the administration page on the web interface.
+RTD supports hosting multiple versions, so we currently have one linked to the `main` branch and another to `stable`.
+New builds are automatically triggered by a webhook whenever you push to a linked branch.
+
+Additionally, one documentation build can also be hosted on [GitHub Pages](https://pypdfium2-team.github.io/pypdfium2/index.html).
+It is implemented with a CI workflow, which is currently linked to `main` and triggered on push as well.
+This provides us with full control over the build environment and the used commands, whereas RTD is kind of limited in this regard.
+
 
 ### Testing
 
@@ -648,6 +614,17 @@ pypdfium2 contains a small test suite to verify the library's functionality. It 
 python3 -m pytest tests/
 ```
 You may pass `-sv` to get more detailed output.
+
+Sometimes, it can also be helpful to test code on many PDFs.[^testing_corpora]
+In this case, the command-line interface and `find` come in handy:
+```bash
+# Example A: Analyse PDF images (in the current working directory)
+find . -name '*.pdf' -exec bash -c "echo \"{}\" && pypdfium2 pageobjects \"{}\" --types image" \;
+# Example B: Parse PDF table of contents
+find . -name '*.pdf' -exec bash -c "echo \"{}\" && pypdfium2 toc \"{}\"" \;
+```
+
+[^testing_corpora]: For instance, one could use the testing corpora of open-source PDF libraries (pdfium, pikepdf/ocrmypdf, mupdf/ghostscript, tika/pdfbox, pdfjs, ...)
 
 ### Release workflow
 
@@ -742,7 +719,6 @@ There are also a few projects that *could* update to pypdfium2 but are still usi
 
 <!-- order: alphabetical by surname -->
 
-* [Anurag Bansal](https://github.com/banagg): Support model for text insertion (`PdfPage.insert_text()`).
 * [Benoît Blanchon](https://github.com/bblanchon): Author of [PDFium binaries](https://github.com/bblanchon/pdfium-binaries/) and [patches](sourcebuild/patches/).
 * [Anderson Bravalheri](https://github.com/abravalheri): Help with PEP 517/518 compliance. Hint to use an environment variable rather than separate setup files.
 * [Bastian Germann](https://github.com/bgermann): Help with inclusion of licenses for third-party components of PDFium.

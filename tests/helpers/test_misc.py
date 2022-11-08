@@ -4,7 +4,7 @@
 import pytest
 import pypdfium2 as pdfium
 
-# TODO test auto_bitmap_format() and colour_tohex()
+# TODO test auto_bitmap_format() and color_tohex()
 
 
 @pytest.mark.parametrize(
