@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2022 geisserml <geisserml@gmail.com>
 # SPDX-License-Identifier: Apache-2.0 OR BSD-3-Clause
 
-__all__ = ["PdfDocument", "PdfXObject"]
+__all__ = ["PdfDocument", "PdfXObject", "PdfOutlineItem"]
 
 import os
 import os.path
@@ -10,11 +10,11 @@ import ctypes
 import logging
 import pathlib
 import functools
+from collections import namedtuple
 from concurrent.futures import ProcessPoolExecutor
 
 import pypdfium2._pypdfium as pdfium
 from pypdfium2._helpers.misc import (
-    OutlineItem,
     FileAccessMode,
     PdfiumError,
     ErrorToStr,
@@ -36,7 +36,7 @@ class PdfDocument:
     Parameters:
         input_data (str | pathlib.Path | bytes | typing.BinaryIO | FPDF_DOCUMENT):
             The input PDF given as file path, bytes, byte buffer, or raw PDFium document handle.
-            :func:`.is_input_buffer` defines which objects are recognised as byte buffers.
+            A byte buffer is defined as an object implementing ``seek()``, ``tell()``, ``read()`` and ``readinto()``.
         password (str | bytes):
             A password to unlock the PDF, if encrypted.
             If the document is not encrypted but a password was given, PDFium should ignore it.
@@ -209,6 +209,7 @@ class PdfDocument:
                  If None, PDFium will set a version automatically.
         """
         
+        # TODO share interface creation in utility function
         filewrite = pdfium.FPDF_FILEWRITE()
         filewrite.version = 1
         filewrite.WriteBlock = get_functype(pdfium.FPDF_FILEWRITE, "WriteBlock")( _buffer_writer(buffer) )
@@ -370,7 +371,7 @@ class PdfDocument:
         view_mode = pdfium.FPDFDest_GetView(dest, n_params, view_pos)
         view_pos = list(view_pos)[:n_params.value]
         
-        return OutlineItem(
+        return PdfOutlineItem(
             level = level,
             title = title,
             is_closed = is_closed,
@@ -395,7 +396,7 @@ class PdfDocument:
             max_depth (int):
                 Maximum recursion depth to consider.
         Yields:
-            :class:`.OutlineItem`: Bookmark information.
+            :class:`.PdfOutlineItem`: Bookmark information.
         """
         
         if seen is None:
@@ -430,7 +431,7 @@ class PdfDocument:
         Print a table of contents.
         
         Parameters:
-            toc (typing.Iterator[OutlineItem]):
+            toc (typing.Iterator[PdfOutlineItem]):
                 Sequence of outline items to show.
             n_digits (int):
                 The number of digits to which viewport coordinates shall be rounded.
@@ -560,6 +561,7 @@ def _open_pdf(input_data, password, autoclose):
     return pdf, to_hold, to_close
 
 
+# TODO move to _utils
 class _buffer_writer:
     
     def __init__(self, buffer):
@@ -571,6 +573,32 @@ class _buffer_writer:
         block = ctypes.cast(data, ctypes.POINTER(ctypes.c_ubyte * size))
         self.buffer.write(block.contents)
         return 1
+
+
+PdfOutlineItem = namedtuple("PdfOutlineItem", "level title is_closed n_kids page_index view_mode view_pos")
+"""
+Bookmark information.
+
+Parameters:
+    level (int):
+        Number of parent items.
+    title (str):
+        String of the bookmark.
+    is_closed (bool):
+        True if child items shall be collapsed, False if they shall be expanded.
+        None if the item has no descendants (i. e. ``n_kids == 0``).
+    n_kids (int):
+        Absolute number of child items, according to the PDF.
+    page_index (int | None):
+        Zero-based index of the page the bookmark points to.
+        May be None if the bookmark has no target page (or it could not be determined).
+    view_mode (int):
+        A view mode constant (:data:`PDFDEST_VIEW_*`) defining how the coordinates of *view_pos* shall be interpreted.
+    view_pos (typing.Sequence[float]):
+        Target position on the page the viewport should jump to when the bookmark is clicked.
+        It is a sequence of :class:`float` values in PDF canvas units.
+        Depending on *view_mode*, it can contain between 0 and 4 coordinates.
+"""
 
 
 class PdfXObject:

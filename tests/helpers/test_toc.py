@@ -46,7 +46,7 @@ def test_gettoc(toc_doc):
     
     # check common values
     for bookmark in toc:
-        assert isinstance(bookmark, pdfium.OutlineItem)
+        assert isinstance(bookmark, pdfium.PdfOutlineItem)
         assert bookmark.view_mode is pdfium.PDFDEST_VIEW_XYZ
         assert round(bookmark.view_pos[0]) == 89
     

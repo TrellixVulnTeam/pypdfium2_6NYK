@@ -6,7 +6,6 @@
 import enum
 import copy
 import ctypes
-from collections import namedtuple
 import pypdfium2._pypdfium as pdfium
 
 
@@ -26,33 +25,6 @@ class RenderOptimizeMode (enum.Enum):
     """ Page rendering optimization modes. """
     LCD_DISPLAY = 1  #: Optimize for LCD displays (via subpixel rendering).
     PRINTING    = 2  #: Optimize for printing.
-
-
-# TODO rename to PdfOutlineItem and move to document.py
-OutlineItem = namedtuple("OutlineItem", "level title is_closed n_kids page_index view_mode view_pos")
-"""
-Bookmark information.
-
-Parameters:
-    level (int):
-        Number of parent items.
-    title (str):
-        String of the bookmark.
-    is_closed (bool):
-        True if child items shall be collapsed, False if they shall be expanded.
-        None if the item has no descendants (i. e. ``n_kids == 0``).
-    n_kids (int):
-        Absolute number of child items, according to the PDF.
-    page_index (int | None):
-        Zero-based index of the page the bookmark points to.
-        May be None if the bookmark has no target page (or it could not be determined).
-    view_mode (int):
-        A view mode constant (:data:`PDFDEST_VIEW_*`) defining how the coordinates of *view_pos* shall be interpreted.
-    view_pos (typing.Sequence[float]):
-        Target position on the page the viewport should jump to when the bookmark is clicked.
-        It is a sequence of :class:`float` values in PDF canvas units.
-        Depending on *view_mode*, it can contain between 0 and 4 coordinates.
-"""
 
 
 def color_tohex(color, rev_byteorder):
