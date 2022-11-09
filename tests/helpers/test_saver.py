@@ -30,6 +30,9 @@ def test_save():
 def test_save_withversion():
     
     pdf = pdfium.PdfDocument(TestFiles.multipage)
+    pre_id_p = pdf.get_identifier(pdfium.FILEIDTYPE_PERMANENT)
+    pre_id_c = pdf.get_identifier(pdfium.FILEIDTYPE_CHANGING)
+    assert isinstance(pre_id_p, bytes)
     pdf.del_page(1)
     
     buffer = io.BytesIO()
@@ -46,3 +49,8 @@ def test_save_withversion():
     
     reopened_pdf = pdfium.PdfDocument(buffer, autoclose=True)
     assert len(reopened_pdf) == 2
+    
+    post_id_p = reopened_pdf.get_identifier(pdfium.FILEIDTYPE_PERMANENT)
+    post_id_c = reopened_pdf.get_identifier(pdfium.FILEIDTYPE_CHANGING)
+    assert pre_id_p == post_id_p
+    assert pre_id_c != post_id_c

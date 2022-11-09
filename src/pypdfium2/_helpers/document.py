@@ -189,6 +189,16 @@ class PdfDocument:
         self._form_config = None
     
     
+    def get_identifier(self, type=pdfium.FILEIDTYPE_PERMANENT):
+        """
+        # TODO
+        """
+        n_bytes = pdfium.FPDF_GetFileIdentifier(self.raw, type, None, 0)
+        buffer = ctypes.create_string_buffer(n_bytes)
+        pdfium.FPDF_GetFileIdentifier(self.raw, type, buffer, n_bytes)
+        return buffer.raw[:n_bytes-2]
+    
+    
     def get_formtype(self):
         """
         # TODO
