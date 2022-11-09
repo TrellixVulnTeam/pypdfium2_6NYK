@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2022 geisserml <geisserml@gmail.com>
 # SPDX-License-Identifier: Apache-2.0 OR BSD-3-Clause
 
+__all__ = ["PdfTextPage", "PdfTextSearcher"]
+
 import ctypes
 import weakref
 import logging
