@@ -152,7 +152,7 @@ def extract_direct(image_obj):
         
         # Notes on other complex filters:
         # CCITTFaxDecode: In theory, could be extracted directly (with a TIFF header builder like pikepdf/models/_transcoding.py:generate_ccitt_header), but PDFium doesn't tell us which CCITT group encoding it is.
-        # JBIG2Decode: PDF stores JBIG2 in special form. Header information is stripped, and global segments may be stored in a separate stream. In that form, the data would probably not be of much use, except perhaps for direct re-insertion into another PDF. We're not sure if it would be possible to re-combine this into a JBIG2 file, or if any application could open this at all. PDFium doesn't provide us with the global segments, anyway.
+        # JBIG2Decode: PDF stores JBIG2 in special form. Header information is stripped, and global segments may be stored in a separate stream. In that form, the data would probably not be of much use, except perhaps for direct re-insertion into another PDF. We're not sure if it would be possible to re-combine this into a single JBIG2 file, or if any application could open this at all. PDFium doesn't provide us with the global segments, anyway.
         
     else:
         raise ImageNotExtractableError("Cannot handle multiple complex filters: %s" % (complex_filters, ))
