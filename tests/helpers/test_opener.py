@@ -247,6 +247,29 @@ def test_object_hierarchy():
         assert not obj._finalizer.alive
 
 
+def _compare_metadata(pdf, metadata, exp_metadata):
+    all_keys = ("Title", "Author", "Subject", "Keywords", "Creator", "Producer", "CreationDate", "ModDate")
+    assert len(metadata) == len(all_keys)
+    assert all(k in metadata for k in all_keys)
+    for k in all_keys:
+        assert metadata[k] == pdf.get_metadata_value(k)
+        if k in exp_metadata:
+            assert metadata[k] == exp_metadata[k]
+        else:
+            assert metadata[k] == ""
+
+
+def test_metadata():
+    pdf = pdfium.PdfDocument(TestFiles.empty)
+    metadata = pdf.get_metadata_dict()
+    exp_metadata = {
+        "Producer": "LibreOffice 6.4",
+        "Creator": "Writer",
+        "CreationDate": "D:20220520145414+02'00'",
+    }
+    _compare_metadata(pdf, metadata, exp_metadata)
+
+
 def test_doc_extras():
         
     pdf = pdfium.PdfDocument(TestFiles.empty, file_access=pdfium.FileAccessMode.BUFFER)

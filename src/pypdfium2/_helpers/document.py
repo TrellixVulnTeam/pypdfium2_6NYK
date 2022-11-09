@@ -189,16 +189,6 @@ class PdfDocument:
         self._form_config = None
     
     
-    def get_identifier(self, type=pdfium.FILEIDTYPE_PERMANENT):
-        """
-        # TODO
-        """
-        n_bytes = pdfium.FPDF_GetFileIdentifier(self.raw, type, None, 0)
-        buffer = ctypes.create_string_buffer(n_bytes)
-        pdfium.FPDF_GetFileIdentifier(self.raw, type, buffer, n_bytes)
-        return buffer.raw[:n_bytes-2]
-    
-    
     def get_formtype(self):
         """
         # TODO
@@ -232,6 +222,32 @@ class PdfDocument:
         
         if not success:
             raise PdfiumError("Failed to save document.")
+    
+        
+    def get_identifier(self, type=pdfium.FILEIDTYPE_PERMANENT):
+        """
+        TODO
+        """
+        n_bytes = pdfium.FPDF_GetFileIdentifier(self.raw, type, None, 0)
+        buffer = ctypes.create_string_buffer(n_bytes)
+        pdfium.FPDF_GetFileIdentifier(self.raw, type, buffer, n_bytes)
+        return buffer.raw[:n_bytes-2]
+    
+    
+    def get_metadata_value(self, key):
+        """
+        TODO needs test case
+        """
+        # NOTE PDFium API does not distinguish between "unset" and "set to an empty string"
+        n_bytes = pdfium.FPDF_GetMetaText(self.raw, key, None, 0)
+        buffer = ctypes.create_string_buffer(n_bytes)
+        pdfium.FPDF_GetMetaText(self.raw, key, buffer, n_bytes)
+        return buffer.raw[:n_bytes-2].decode("utf-16-le")
+    
+    
+    def get_metadata_dict(self):
+        keys = ("Title", "Author", "Subject", "Keywords", "Creator", "Producer", "CreationDate", "ModDate")
+        return {k: self.get_metadata_value(k) for k in keys}
     
     
     def get_version(self):
