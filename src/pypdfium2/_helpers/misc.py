@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2022 geisserml <geisserml@gmail.com>
 # SPDX-License-Identifier: Apache-2.0 OR BSD-3-Clause
 
+# TODO clean up namespace, make many members private
+
 import enum
 import copy
 import ctypes
@@ -26,6 +28,7 @@ class RenderOptimizeMode (enum.Enum):
     PRINTING    = 2  #: Optimize for printing.
 
 
+# TODO rename to PdfOutlineItem and move to document.py
 OutlineItem = namedtuple("OutlineItem", "level title is_closed n_kids page_index view_mode view_pos")
 """
 Bookmark information.
@@ -83,7 +86,6 @@ def color_tohex(color, rev_byteorder):
 # TODO move some components to private _utils.py file
 
 
-# TODO -> private
 def get_functype(struct, funcname):
     """
     Parameters:
@@ -97,12 +99,10 @@ def get_functype(struct, funcname):
     return {k: v for k, v in struct._fields_}[funcname]
 
 
-# TODO -> private
 def get_slots(struct):
     return copy.copy(struct.__slots__)
 
 
-# TODO -> private or dedicated helper object
 def image_metadata_to_str(metadata, pad=""):
     imageinfo_maps = {"colorspace": ColorspaceToStr}
     as_str = ""
@@ -128,7 +128,6 @@ class _buffer_reader:
         return 1
 
 
-# TODO -> private
 def get_bufaccess(buffer):
     """
     Acquire an :class:`FPDF_FILEACCESS` interface for a byte buffer.
@@ -151,7 +150,6 @@ def get_bufaccess(buffer):
     return access, to_hold
 
 
-# TODO -> private
 def is_input_buffer(maybe_buffer):
     """
     Returns:
