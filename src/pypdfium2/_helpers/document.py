@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2022 geisserml <geisserml@gmail.com>
 # SPDX-License-Identifier: Apache-2.0 OR BSD-3-Clause
 
-__all__ = ["PdfDocument", "PdfXObject", "PdfOutlineItem"]
+__all__ = ["PdfDocument", "PdfOutlineItem"]
 
 import os
 import os.path
@@ -24,7 +24,8 @@ from pypdfium2._helpers.misc import (
     is_input_buffer,
 )
 from pypdfium2._helpers.page import PdfPage
-from pypdfium2._helpers.pageobjects import PdfObject
+from pypdfium2._helpers.xobject import PdfXObject
+from pypdfium2._helpers.attachments import PdfAttachment
 
 logger = logging.getLogger(__name__)
 
@@ -234,22 +235,6 @@ class PdfDocument:
         return buffer.raw[:n_bytes-2]
     
     
-    def get_metadata_value(self, key):
-        """
-        TODO needs test case
-        """
-        # NOTE PDFium API does not distinguish between "unset" and "set to an empty string"
-        n_bytes = pdfium.FPDF_GetMetaText(self.raw, key, None, 0)
-        buffer = ctypes.create_string_buffer(n_bytes)
-        pdfium.FPDF_GetMetaText(self.raw, key, buffer, n_bytes)
-        return buffer.raw[:n_bytes-2].decode("utf-16-le")
-    
-    
-    def get_metadata_dict(self):
-        keys = ("Title", "Author", "Subject", "Keywords", "Creator", "Producer", "CreationDate", "ModDate")
-        return {k: self.get_metadata_value(k) for k in keys}
-    
-    
     def get_version(self):
         """
         Returns:
@@ -261,6 +246,61 @@ class PdfDocument:
         if not success:
             return None
         return version.value
+    
+    
+    def get_metadata_value(self, key):
+        """
+        TODO
+        """
+        # NOTE PDFium API does not distinguish between "unset" and "set to an empty string"
+        n_bytes = pdfium.FPDF_GetMetaText(self.raw, key, None, 0)
+        buffer = ctypes.create_string_buffer(n_bytes)
+        pdfium.FPDF_GetMetaText(self.raw, key, buffer, n_bytes)
+        return buffer.raw[:n_bytes-2].decode("utf-16-le")
+    
+    
+    def get_metadata_dict(self):
+        """
+        TODO
+        """
+        keys = ("Title", "Author", "Subject", "Keywords", "Creator", "Producer", "CreationDate", "ModDate")
+        return {k: self.get_metadata_value(k) for k in keys}
+    
+    
+    def count_attachments(self):
+        """
+        TODO
+        """
+        return pdfium.FPDFDoc_GetAttachmentCount(self.raw)
+    
+    
+    def get_attachment(self, index):
+        """
+        TODO
+        """
+        raw_attachment = pdfium.FPDFDoc_GetAttachment(self.raw, index)
+        if not raw_attachment:
+            raise PdfiumError("Failed to get attachment at index %s." % (index, ))
+        return PdfAttachment(raw_attachment, self)
+    
+    
+    def add_attachment(self, name):
+        """
+        TODO
+        """
+        raw_attachment = pdfium.FPDFDoc_AddAttachment(self.raw, name)
+        if not raw_attachment:
+            raise PdfiumError("Failed to create new attachment '%s'." % (name, ))
+        return PdfAttachment(raw_attachment, self)
+    
+    
+    def del_attachment(self, index):
+        """
+        TODO
+        """
+        success = pdfium.FPDFDoc_DeleteAttachment(self.raw, index)
+        if not success:
+            raise PdfiumError("Failed to delete attachment at index %s." % (index, ))
     
     
     def get_page(self, index):
@@ -625,48 +665,3 @@ Parameters:
         It is a sequence of :class:`float` values in PDF canvas units.
         Depending on *view_mode*, it can contain between 0 and 4 coordinates.
 """
-
-
-class PdfXObject:
-    """
-    XObject helper class.
-    
-    Attributes:
-        raw (FPDF_XOBJECT): The underlying PDFium XObject handle.
-        pdf (PdfDocument): Reference to the document this XObject belongs to.
-    """
-    
-    def __init__(self, raw, pdf):
-        self.raw = raw
-        self.pdf = pdf
-        self._finalizer = weakref.finalize(
-            self, self._static_close,
-            self.raw, self.pdf,
-        )
-    
-    
-    def _tree_closed(self):
-        if self.raw is None:
-            return True
-        return self.pdf._tree_closed()
-    
-    @staticmethod
-    def _static_close(raw, parent):
-        # logger.debug("Closing XObject")
-        if parent._tree_closed():
-            logger.critical("Document closed before XObject (this is illegal). Document: %s" % parent)
-        pdfium.FPDF_CloseXObject(raw)
-    
-    
-    def as_pageobject(self):
-        """
-        Returns:
-            PdfObject: An independent page object representation of the XObject.
-            If multiple page objects are created from one XObject, they share resources.
-            Page objects created from an XObject remain valid after the XObject is finalized.
-        """
-        raw_pageobj = pdfium.FPDF_NewFormObjectFromXObject(self.raw)
-        return PdfObject(
-            raw = raw_pageobj,
-            pdf = self.pdf,
-        )
