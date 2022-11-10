@@ -35,8 +35,8 @@ class PdfDocument:
     Document helper class.
     
     Parameters:
-        input_data (str | pathlib.Path | bytes | typing.BinaryIO | FPDF_DOCUMENT):
-            The input PDF given as file path, bytes, byte buffer, or raw PDFium document handle.
+        input_data (str | pathlib.Path | bytes | ctypes.Array | typing.BinaryIO | FPDF_DOCUMENT):
+            The input PDF given as file path, bytes, ctypes array, byte buffer, or raw PDFium document handle.
             A byte buffer is defined as an object implementing ``seek()``, ``tell()``, ``read()`` and ``readinto()``.
         password (str | bytes):
             A password to unlock the PDF, if encrypted.
@@ -608,14 +608,14 @@ def _open_pdf(input_data, password, autoclose):
     
     if isinstance(input_data, str):
         pdf = pdfium.FPDF_LoadDocument(input_data.encode("utf-8"), password)
-    elif isinstance(input_data, bytes):
-        pdf = pdfium.FPDF_LoadMemDocument64(input_data, len(input_data), password)
-        to_hold = (input_data, )
     elif is_input_buffer(input_data):
         bufaccess, to_hold = get_bufaccess(input_data)
         if autoclose:
             to_close = (input_data, )
         pdf = pdfium.FPDF_LoadCustomDocument(bufaccess, password)
+    elif isinstance(input_data, bytes) or isinstance(input_data, ctypes.Array):
+        pdf = pdfium.FPDF_LoadMemDocument64(input_data, len(input_data), password)
+        to_hold = (input_data, )
     else:
         raise TypeError("Invalid input type '%s'" % type(input_data).__name__)
     

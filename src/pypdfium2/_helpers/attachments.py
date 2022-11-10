@@ -45,12 +45,14 @@ class PdfAttachment:
                 
         n_bytes = ctypes.c_ulong()
         pdfium.FPDFAttachment_GetFile(self.raw, None, 0, n_bytes)
-        if n_bytes <= 0:
+        n_bytes = n_bytes.value
+        if n_bytes == 0:
             raise PdfiumError("Failed to extract attachment (buffer length %s)." % (n_bytes, ))
         
         buffer = (ctypes.c_ubyte * n_bytes)()
         out_buflen = ctypes.c_ulong()
         success = pdfium.FPDFAttachment_GetFile(self.raw, buffer, n_bytes, out_buflen)
+        out_buflen = out_buflen.value
         if not success:
             raise PdfiumError("Failed to extract attachment (error status).")
         if n_bytes < out_buflen:
