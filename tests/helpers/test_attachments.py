@@ -20,9 +20,19 @@ def test_attachments():
     data_a = attachment_a.get_data()
     assert isinstance(data_a, (ctypes.c_char * 4))
     assert str(data_a, encoding="utf-8") == "test"
+    
+    assert attachment_a.has_key("CheckSum")
+    assert attachment_a.get_value_type("CheckSum") == pdfium.FPDF_OBJECT_STRING
     assert attachment_a.get_str_value("CheckSum") == "<098F6BCD4621D373CADE4E832627B4F6>"
     assert attachment_a.get_str_value("CreationDate") == "D:20170712214438-07'00'"
     assert attachment_a.get_str_value("ModDate") == "D:20160115091400"
+    
+    assert attachment_a.has_key("Size")
+    assert attachment_a.get_value_type("Size") == pdfium.FPDF_OBJECT_NUMBER
+    assert attachment_a.get_str_value("Size") == ""
+    
+    assert not attachment_a.has_key("asdf")
+    assert attachment_a.get_str_value("asdf") == ""
     
     in_text = "pypdfium2 test"
     attachment_a.set_data(in_text.encode("utf-8"))
