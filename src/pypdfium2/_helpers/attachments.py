@@ -26,36 +26,6 @@ class PdfAttachment:
         self.pdf = pdf
     
     
-    def __contains__(self, key):
-        return pdfium.FPDFAttachment_HasKey(self.raw, _encode_key(key))
-    
-    
-    def __getitem__(self, key):
-        
-        key = _encode_key(key)
-        if key not in self:
-            raise KeyError("Attachment does not have key '%s'" % (key, ))
-        
-        type = self.get_value_type(key)
-        if type == pdfium.FPDF_OBJECT_NULLOBJ:
-            return None
-        elif type in (pdfium.FPDF_OBJECT_STRING, pdfium.FPDF_OBJECT_NAME):
-            pass  # TODO
-        else:
-            raise KeyError("Cannot extract key '%s' (unsupported value type '%s')" % (key, type))
-    
-    
-    def __setitem__(self, key, value):
-        pass  # TODO
-    
-    
-    def get_value_type(self, key):
-        """
-        TODO
-        """
-        return pdfium.FPDFAttachment_GetValueType(self.raw, _encode_key(key))
-    
-    
     def get_name(self):
         """
         TODO
@@ -67,6 +37,31 @@ class PdfAttachment:
     
     
     def get_data(self):
+        """
+        TODO
+        """
+        pass  # TODO
+    
+    
+    def has_key(self, key):
+        pass  # TODO
+    
+    
+    def get_value_type(self, key):
+        """
+        TODO
+        """
+        return pdfium.FPDFAttachment_GetValueType(self.raw, _encode_key(key))
+    
+    
+    def get_str_value(self, key):
+        """
+        TODO
+        """
+        pass  # TODO
+    
+    
+    def set_str_value(self, key, value):
         """
         TODO
         """
