@@ -54,6 +54,7 @@ class PdfPage:
             logger.critical("Document closed before page (this is illegal). Document: %s" % parent)
         pdfium.FPDF_ClosePage(raw)
     
+    # TODO page labels
     
     def get_width(self):
         """
