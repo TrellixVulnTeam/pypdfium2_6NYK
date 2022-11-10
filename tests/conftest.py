@@ -20,21 +20,20 @@ sys.path.insert(0, str(SourceTree / "setupsrc"))
 
 
 class TestFiles:
-    render              = ResourceDir / "render.pdf"
-    encrypted           = ResourceDir / "encrypted.pdf"
-    multipage           = ResourceDir / "multipage.pdf"
-    toc                 = ResourceDir / "toc.pdf"
-    toc_viewmodes       = ResourceDir / "toc_viewmodes.pdf"
-    toc_maxdepth        = ResourceDir / "toc_maxdepth.pdf"
-    toc_circular        = ResourceDir / "toc_circular.pdf"
-    box_fallback        = ResourceDir / "box_fallback.pdf"
-    text                = ResourceDir / "text.pdf"
-    empty               = ResourceDir / "empty.pdf"
-    images              = ResourceDir / "images.pdf"
-    form                = ResourceDir / "form_listbox.pdf"
-    attachments         = ResourceDir / "attachments.pdf"
-    attachments_invalid = ResourceDir / "attachments_invalid.pdf"
-    mona_lisa           = ResourceDir / "mona_lisa.jpg"
+    render        = ResourceDir / "render.pdf"
+    encrypted     = ResourceDir / "encrypted.pdf"
+    multipage     = ResourceDir / "multipage.pdf"
+    toc           = ResourceDir / "toc.pdf"
+    toc_viewmodes = ResourceDir / "toc_viewmodes.pdf"
+    toc_maxdepth  = ResourceDir / "toc_maxdepth.pdf"
+    toc_circular  = ResourceDir / "toc_circular.pdf"
+    box_fallback  = ResourceDir / "box_fallback.pdf"
+    text          = ResourceDir / "text.pdf"
+    empty         = ResourceDir / "empty.pdf"
+    images        = ResourceDir / "images.pdf"
+    form          = ResourceDir / "form_listbox.pdf"
+    attachments   = ResourceDir / "attachments.pdf"
+    mona_lisa     = ResourceDir / "mona_lisa.jpg"
 
 
 ExpRenderPixels = (

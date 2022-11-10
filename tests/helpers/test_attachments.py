@@ -14,6 +14,8 @@ def test_attachments():
     assert pdf.count_attachments() == 2
     
     attachment_a = pdf.get_attachment(0)
+    assert isinstance(attachment_a, pdfium.PdfAttachment)
+    assert isinstance(attachment_a.raw, pdfium.FPDF_ATTACHMENT)
     assert attachment_a.get_name() == "1.txt"
     data_a = attachment_a.get_data()
     assert isinstance(data_a, (ctypes.c_char * 4))
@@ -46,3 +48,6 @@ def test_attachments():
         data_c = fh.read()
     attachment_c.set_data(data_c)
     assert attachment_c.get_data().raw == data_c
+    
+    pdf.del_attachment(1)
+    assert pdf.count_attachments() == 2
