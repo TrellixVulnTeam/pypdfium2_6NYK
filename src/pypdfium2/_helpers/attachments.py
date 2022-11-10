@@ -33,7 +33,7 @@ class PdfAttachment:
         """
         n_bytes = pdfium.FPDFAttachment_GetName(self.raw, None, 0)
         buffer = ctypes.create_string_buffer(n_bytes)
-        buffer_ptr = ctypes.cast(buffer, pdfium.FPDF_WCHAR)
+        buffer_ptr = ctypes.cast(buffer, ctypes.POINTER(pdfium.FPDF_WCHAR))
         pdfium.FPDFAttachment_GetName(self.raw, buffer_ptr, n_bytes)
         return buffer.raw[:n_bytes-2].decode("utf-16-le")
     
@@ -95,7 +95,7 @@ class PdfAttachment:
             raise PdfiumError("Failed to get value of key '%s'." % (key, ))
         
         buffer = ctypes.create_string_buffer(n_bytes)
-        buffer_ptr = ctypes.cast(buffer, pdfium.FPDF_WCHAR)
+        buffer_ptr = ctypes.cast(buffer, ctypes.POINTER(pdfium.FPDF_WCHAR))
         pdfium.FPDFAttachment_GetStringValue(self.raw, key, buffer_ptr, n_bytes)
         
         return buffer.raw[:n_bytes-2].decode("utf-16-le")
