@@ -17,6 +17,10 @@ def test_attachments():
     assert isinstance(data_a, (ctypes.c_ubyte * 4))
     assert str(data_a, encoding="utf-8") == "test"
     
+    in_text = "pypdfium2 test"
+    attachment_a.set_data(in_text.encode("utf-8"))
+    assert str(attachment_a.get_data(), encoding="utf-8") == in_text
+    
     attachment_b = pdf.get_attachment(1)
     assert attachment_b.get_name() == "attached.pdf"
     data_b = attachment_b.get_data()
@@ -27,3 +31,7 @@ def test_attachments():
     page = pdf_attached[0]
     textpage = page.get_textpage()
     assert textpage.get_text_range() == "test"
+    
+    name_c = "Mona Lisa"
+    attachment_c = pdf.add_attachment(name_c)
+    assert attachment_c.get_name() == name_c

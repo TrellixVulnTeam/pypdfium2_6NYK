@@ -288,7 +288,9 @@ class PdfDocument:
         """
         TODO
         """
-        raw_attachment = pdfium.FPDFDoc_AddAttachment(self.raw, name)
+        enc_name = (name + "\x00").encode("utf-16-le")
+        enc_name_ptr = ctypes.cast(enc_name, pdfium.FPDF_WIDESTRING)
+        raw_attachment = pdfium.FPDFDoc_AddAttachment(self.raw, enc_name_ptr)
         if not raw_attachment:
             raise PdfiumError("Failed to create new attachment '%s'." % (name, ))
         return PdfAttachment(raw_attachment, self)
