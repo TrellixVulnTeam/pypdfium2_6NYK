@@ -20,6 +20,9 @@ def test_attachments():
     data_a = attachment_a.get_data()
     assert isinstance(data_a, (ctypes.c_char * 4))
     assert str(data_a, encoding="utf-8") == "test"
+    assert attachment_a.get_str_value("CheckSum") == "<098F6BCD4621D373CADE4E832627B4F6>"
+    assert attachment_a.get_str_value("CreationDate") == "D:20170712214438-07'00'"
+    assert attachment_a.get_str_value("ModDate") == "D:20160115091400"
     
     in_text = "pypdfium2 test"
     attachment_a.set_data(in_text.encode("utf-8"))
@@ -52,5 +55,6 @@ def test_attachments():
     pdf.del_attachment(1)
     assert pdf.count_attachments() == 2
     
+    # FIXME changes are not applied?
     with open(OutputDir / "attachments_processed.pdf", "wb") as buf:
         pdf.save(buf)
