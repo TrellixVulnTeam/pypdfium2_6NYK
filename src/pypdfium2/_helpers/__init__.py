@@ -6,7 +6,7 @@ from pypdfium2._helpers.matrix import *
 from pypdfium2._helpers.bitmap import *
 from pypdfium2._helpers.document import *
 from pypdfium2._helpers.xobject import *
-from pypdfium2._helpers.document_async import *
+from pypdfium2._helpers.availability import *
 from pypdfium2._helpers.attachments import *
 from pypdfium2._helpers.page import *
 from pypdfium2._helpers.pageobjects import *
