@@ -91,8 +91,6 @@ class PdfAttachment:
         
         key = _encode_key(key)
         n_bytes = pdfium.FPDFAttachment_GetStringValue(self.raw, key, None, 0)
-        if n_bytes == 2:
-            raise PdfiumError("Failed to get value of key '%s' (type is not str or name)." % (key, ))
         if n_bytes <= 0:
             raise PdfiumError("Failed to get value of key '%s'." % (key, ))
         
@@ -107,4 +105,6 @@ class PdfAttachment:
         """
         TODO
         """
-        pass  # TODO
+        enc_value = (value + "\x00").encode("utf-16-le")
+        enc_value_ptr = ctypes.cast(enc_value, pdfium.FPDF_WIDESTRING)
+        pdfium.FPDFAttachment_SetStringValue(self.raw, _encode_key(key), enc_value_ptr)

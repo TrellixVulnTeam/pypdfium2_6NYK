@@ -197,7 +197,7 @@ class PdfDocument:
         return pdfium.FPDF_GetFormType(self.raw)
     
     
-    def save(self, buffer, version=None):
+    def save(self, buffer, version=None, flags=pdfium.FPDF_NO_INCREMENTAL):
         """
         Save the document into an output buffer, at its current state.
         
@@ -206,8 +206,10 @@ class PdfDocument:
                 A byte buffer to capture the data.
                 It may be any object implementing the ``write()`` method.
             version (int | None):
-                 The PDF version to use, given as an integer (14 for 1.4, 15 for 1.5, ...).
-                 If None, PDFium will set a version automatically.
+                The PDF version to use, given as an integer (14 for 1.4, 15 for 1.5, ...).
+                If None, PDFium will set a version automatically.
+            flags (int):
+                PDFium saving flags.
         """
         
         # TODO share interface creation in utility function
@@ -215,7 +217,7 @@ class PdfDocument:
         filewrite.version = 1
         filewrite.WriteBlock = get_functype(pdfium.FPDF_FILEWRITE, "WriteBlock")( _buffer_writer(buffer) )
         
-        saveargs = (self.raw, filewrite, pdfium.FPDF_NO_INCREMENTAL)
+        saveargs = (self.raw, filewrite, flags)
         if version is None:
             success = pdfium.FPDF_SaveAsCopy(*saveargs)
         else:

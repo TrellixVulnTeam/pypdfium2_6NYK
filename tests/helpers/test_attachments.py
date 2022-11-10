@@ -5,7 +5,7 @@ import re
 import ctypes
 import pytest
 import pypdfium2 as pdfium
-from ..conftest import TestFiles
+from ..conftest import TestFiles, OutputDir
 
 
 def test_attachments():
@@ -51,3 +51,6 @@ def test_attachments():
     
     pdf.del_attachment(1)
     assert pdf.count_attachments() == 2
+    
+    with open(OutputDir / "attachments_processed.pdf", "wb") as buf:
+        pdf.save(buf)
