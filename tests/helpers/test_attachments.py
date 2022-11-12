@@ -4,6 +4,7 @@
 import re
 import ctypes
 import pytest
+import hashlib
 import pypdfium2 as pdfium
 from ..conftest import TestFiles, OutputDir
 
@@ -21,11 +22,14 @@ def test_attachments():
     assert isinstance(data_a, (ctypes.c_char * 4))
     assert str(data_a, encoding="utf-8") == "test"
     
-    assert attachment_a.has_key("CheckSum")
-    assert attachment_a.get_value_type("CheckSum") == pdfium.FPDF_OBJECT_STRING
-    assert attachment_a.get_str_value("CheckSum") == "<098F6BCD4621D373CADE4E832627B4F6>"
+    assert attachment_a.has_key("CreationDate")
     assert attachment_a.get_str_value("CreationDate") == "D:20170712214438-07'00'"
     assert attachment_a.get_str_value("ModDate") == "D:20160115091400"
+    
+    exp_checksum = "098f6bcd4621d373cade4e832627b4f6"
+    assert attachment_a.get_value_type("CheckSum") == pdfium.FPDF_OBJECT_STRING
+    assert attachment_a.get_str_value("CheckSum") == "<%s>" % (exp_checksum.upper(), )
+    assert exp_checksum == hashlib.md5(data_a).hexdigest()
     
     assert attachment_a.has_key("Size")
     assert attachment_a.get_value_type("Size") == pdfium.FPDF_OBJECT_NUMBER
@@ -49,8 +53,8 @@ def test_attachments():
     textpage = page.get_textpage()
     assert textpage.get_text_range() == "test"
     
-    name_c = "Mona Lisa"
-    attachment_c = pdf.add_attachment(name_c)
+    name_c = "Mona Lisa.jpg"
+    attachment_c = pdf.new_attachment(name_c)
     assert pdf.count_attachments() == 3
     assert attachment_c.get_name() == name_c
     
@@ -62,9 +66,24 @@ def test_attachments():
     attachment_c.set_data(data_c)
     assert attachment_c.get_data().raw == data_c
     
-    pdf.del_attachment(1)
+    # NOTE new attachments may appear at an arbitrary index
+    attachment_0 = pdf.get_attachment(0)
+    assert attachment_0.get_name() == "1.txt"
+    attachment_1 = pdf.get_attachment(1)
+    assert attachment_1.get_name() == "Mona Lisa.jpg"
+    attachment_2 = pdf.get_attachment(2)
+    assert attachment_2.get_name() == "attached.pdf"
+    
+    pdf.del_attachment(2)
     assert pdf.count_attachments() == 2
     
-    # FIXME changes are not applied?
-    with open(OutputDir / "attachments_processed.pdf", "wb") as buf:
+    out_path = OutputDir / "attachments.pdf"
+    with open(out_path, "wb") as buf:
         pdf.save(buf)
+    
+    pdf = pdfium.PdfDocument(out_path)
+    assert pdf.count_attachments() == 2
+    attachment_0 = pdf.get_attachment(0)
+    assert attachment_0.get_name() == "1.txt"
+    attachment_1 = pdf.get_attachment(1)
+    assert attachment_1.get_name() == "Mona Lisa.jpg"

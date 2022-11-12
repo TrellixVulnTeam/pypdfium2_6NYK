@@ -286,10 +286,11 @@ class PdfDocument:
         return PdfAttachment(raw_attachment, self)
     
     
-    def add_attachment(self, name):
+    def new_attachment(self, name):
         """
         TODO
         """
+        # NOTE new attachments may appear at an arbitrary index
         enc_name = (name + "\x00").encode("utf-16-le")
         enc_name_ptr = ctypes.cast(enc_name, pdfium.FPDF_WIDESTRING)
         raw_attachment = pdfium.FPDFDoc_AddAttachment(self.raw, enc_name_ptr)
