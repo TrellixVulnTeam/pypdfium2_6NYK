@@ -11,6 +11,8 @@ from ..conftest import TestFiles, OutputDir
 
 def test_attachments():
     
+    # TODO test set_str_value()
+    
     pdf = pdfium.PdfDocument(TestFiles.attachments)
     assert pdf.count_attachments() == 2
     
