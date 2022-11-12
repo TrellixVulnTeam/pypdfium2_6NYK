@@ -12,7 +12,7 @@ Also see the issues panel and inline `TODO` marks in source code.
 * Check if we should use `FPDFPage_HasTransparency()` on rendering.
 * Add new support models for attachments, document metadata, and image extraction.
 * Add helper methods for page labels and trailer ID.
-* Think about providing public init/destory functions.
+* Think about providing public init/destroy functions.
 
 ### Setup Infrastructure
 * Migrate everything to pathlib
