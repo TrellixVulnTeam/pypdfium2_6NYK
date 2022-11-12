@@ -40,13 +40,13 @@ def main(args):
         image = pdfium.PdfImage.new(pdf)
         buffer = open(path, "rb")
         image.load_jpeg(buffer, inline=args.inline, autoclose=True)
-        width, height = image.get_size()
+        metadata = image.get_metadata()
         
         matrix = pdfium.PdfMatrix()
-        matrix.scale(width, height)
+        matrix.scale(metadata.width, metadata.height)
         image.set_matrix(matrix)
         
-        page = pdf.new_page(width, height)
+        page = pdf.new_page(metadata.width, metadata.height)
         page.insert_object(image)
         page.generate_content()
     

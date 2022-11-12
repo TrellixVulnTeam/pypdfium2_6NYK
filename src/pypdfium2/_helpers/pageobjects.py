@@ -237,15 +237,6 @@ class PdfImage (PdfObject):
         return metadata
     
     
-    # TODO perhaps remove to prevent caller from inadvertently doing get_metadata() twice
-    def get_size(self):
-        """
-        TODO
-        """
-        metadata = self.get_metadata()
-        return (metadata.width, metadata.height)
-    
-    
     def get_bitmap(self, render=False):
         """
         Get a bitmap rasterization of the image.
@@ -277,7 +268,7 @@ class PdfImage (PdfObject):
         """
         
         if decode_simple:
-            # apply simple filters (see crbug.com/pdfium/1203 for description)
+            # apply simple filters (see https://crbug.com/pdfium/1203 for description)
             func = pdfium.FPDFImageObj_GetImageDataDecoded
         else:
             func = pdfium.FPDFImageObj_GetImageDataRaw

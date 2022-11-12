@@ -64,7 +64,8 @@ def test_new_jpeg():
     image_a = pdfium.PdfImage.new(pdf)
     buffer = open(TestFiles.mona_lisa, "rb")
     image_a.load_jpeg(buffer, autoclose=True)
-    width, height = image_a.get_size()
+    metadata = image_a.get_metadata()
+    width, height = metadata.width, metadata.height
     page.insert_object(image_a)
     
     assert len(pdf._data_holder) == 2
@@ -127,7 +128,8 @@ def test_replace_image():
     
     buffer = open(TestFiles.mona_lisa, "rb")
     image_1.load_jpeg(buffer, pages=[page])
-    width, height = image_1.get_size()
+    metadata = image_1.get_metadata()
+    width, height = metadata.width, metadata.height
     assert matrices == [img.get_matrix() for img in images]
     
     # preserve the aspect ratio
