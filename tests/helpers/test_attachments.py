@@ -11,8 +11,6 @@ from ..conftest import TestFiles, OutputDir
 
 def test_attachments():
     
-    # TODO test set_str_value()
-    
     pdf = pdfium.PdfDocument(TestFiles.attachments)
     assert pdf.count_attachments() == 2
     
@@ -27,6 +25,9 @@ def test_attachments():
     assert attachment_a.has_key("CreationDate")
     assert attachment_a.get_str_value("CreationDate") == "D:20170712214438-07'00'"
     assert attachment_a.get_str_value("ModDate") == "D:20160115091400"
+    moddate_new = "D:20190115091400"
+    attachment_a.set_str_value("ModDate", moddate_new)
+    assert attachment_a.get_str_value("ModDate") == moddate_new
     
     exp_checksum = "098f6bcd4621d373cade4e832627b4f6"
     assert attachment_a.get_value_type("CheckSum") == pdfium.FPDF_OBJECT_STRING
@@ -43,6 +44,10 @@ def test_attachments():
     in_text = "pypdfium2 test"
     attachment_a.set_data(in_text.encode("utf-8"))
     assert str(attachment_a.get_data(), encoding="utf-8") == in_text
+    assert attachment_a.get_str_value("ModDate") == ""
+    cdate_new = attachment_a.get_str_value("CreationDate")
+    attachment_a.set_str_value("ModDate", cdate_new)
+    assert attachment_a.get_str_value("ModDate") == cdate_new
     
     attachment_b = pdf.get_attachment(1)
     assert attachment_b.get_name() == "attached.pdf"
