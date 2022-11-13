@@ -142,15 +142,18 @@ class PdfMatrix:
         self.f *= y
     
     
-    def rotate(self, angle):
+    def rotate(self, angle, ccw=False):
         """
         Parameters:
             angle (float): Clockwise angle in degrees to rotate the matrix.
         """
-        # row vectors -> b = -s leads to clockwise rotation indeed
         angle = (angle/180) * math.pi  # convert to radian
         c, s = math.cos(angle), math.sin(angle)
-        self.multiply( PdfMatrix(c, -s, s, c) )
+        if ccw:
+            matrix = PdfMatrix(c, s, -s, c)
+        else:
+            matrix = PdfMatrix(c, -s, s, c)
+        self.multiply(matrix)
     
     
     def mirror(self, vertical, horizontal):
