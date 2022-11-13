@@ -300,6 +300,18 @@ class PdfPage:
                     level = level + 1,
                 )
     
+    
+    def flatten(self, flag=pdfium.FLAT_NORMALDISPLAY):
+        """
+        
+        """
+        # NOTE Highly unreliable as of pdfium 5406 (takes no effect but still returns success in many cases)
+        rc = pdfium.FPDFPage_Flatten(self.raw, flag)
+        if rc == pdfium.FLATTEN_FAIL:
+            raise PdfiumError("Failed to flatten annotations / form fileds.")
+        return rc
+    
+    
     # TODO add render_matrix() and render_matrix_supported()
     
     def render(

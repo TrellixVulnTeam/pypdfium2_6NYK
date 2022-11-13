@@ -3,7 +3,7 @@
 
 import pytest
 import pypdfium2 as pdfium
-from ..conftest import TestFiles
+from ..conftest import TestFiles, OutputDir
 
 
 def test_boxes():
@@ -42,3 +42,16 @@ def test_rotation():
     for r in (90, 180, 270, 0):
         page.set_rotation(r)
         assert page.get_rotation() == r
+
+
+def test_flatten():
+    
+    pdf = pdfium.PdfDocument(TestFiles.form)
+    page = pdf[0]
+    
+    rc = page.flatten()
+    assert rc == pdfium.FLATTEN_SUCCESS
+    
+    # NOTE xfail - flattening takes no effect
+    # with open(OutputDir / "flattened.pdf", "wb") as buf:
+    #     pdf.save(buf)
