@@ -315,9 +315,9 @@ class PdfPage:
     
     def render_matrix(
             self,
-            matrix = PdfMatrix(),
-            crop = (0, 0, 0, 0),
-            padding = (0, 0),
+            size,
+            matrix,
+            clipping,
             bitmap_maker = PdfBitmap.new_native,
             fill_color = (255, 255, 255, 255),
             **kwargs
@@ -325,21 +325,13 @@ class PdfPage:
         """
         TODO
         """
-                
+        
         cl_format, rev_byteorder, flags = _parse_renderopts(
             fill_color = fill_color,
             color_scheme = None,
             **kwargs
         )
-        
-        left, bottom, right, top = matrix.on_rect(
-            crop[0],
-            crop[1],
-            self.get_width()  - crop[2],
-            self.get_height() - crop[3],
-        )
-        width  = int(right + padding[0])
-        height = int(top   + padding[1])
+        width, height = size
         
         bitmap = bitmap_maker(
             width = width,
@@ -349,8 +341,7 @@ class PdfPage:
         )
         bitmap.fill_rect(0, 0, width, height, fill_color)
         
-        clipping_rect = pdfium.FS_RECTF(left, top, right, bottom)
-        pdfium.FPDF_RenderPageBitmapWithMatrix(bitmap.raw, self.raw, matrix.to_pdfium(), clipping_rect, flags)
+        pdfium.FPDF_RenderPageBitmapWithMatrix(bitmap.raw, self.raw, matrix.to_pdfium(), pdfium.FS_RECTF(*clipping), flags)
         
         return bitmap
     

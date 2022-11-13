@@ -191,10 +191,10 @@ class PdfMatrix:
             (float, float, float, float): Transformed rectangle.
         """
         points = (
-            self.on_point(left, bottom),
-            self.on_point(right, bottom),
             self.on_point(left, top),
+            self.on_point(left, bottom),
             self.on_point(right, top),
+            self.on_point(right, bottom),
         )
         new_rect = (
             min(p[0] for p in points),  # left
