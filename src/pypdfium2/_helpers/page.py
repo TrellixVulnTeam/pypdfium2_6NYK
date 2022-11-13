@@ -303,7 +303,7 @@ class PdfPage:
     
     def flatten(self, flag=pdfium.FLAT_NORMALDISPLAY):
         """
-        
+        TODO
         """
         # NOTE Highly unreliable as of pdfium 5406 (takes no effect but still returns success in many cases)
         rc = pdfium.FPDFPage_Flatten(self.raw, flag)
@@ -312,7 +312,11 @@ class PdfPage:
         return rc
     
     
-    # TODO add render_matrix() and render_matrix_supported()
+    def render_matrix(
+            self,
+        ):
+        pass
+    
     
     def render(
             self,
@@ -328,7 +332,7 @@ class PdfPage:
             **kwargs
         ):
         """
-        # TODO
+        TODO
         """
         
         src_width  = math.ceil(self.get_width()  * scale)

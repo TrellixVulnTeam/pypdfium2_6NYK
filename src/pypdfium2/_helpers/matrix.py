@@ -11,11 +11,12 @@ import pypdfium2._pypdfium as pdfium
 
 class PdfMatrix:
     """
-    PDF transformation matrix helper class (Python).
+    PDF transformation matrix helper class.
     
     See the PDF 1.7 specification, Section 8.3.3 ("Common Transformations").
     
     Note:
+        * This is a pure-python support model (independent of PDFium).
         * The PDF format uses row vectors.
         * Transformations operate from the origin of the coordinate system.
     
@@ -28,18 +29,19 @@ class PdfMatrix:
         f (float): Matrix value [2][1] (Y translation).
     """
     
-    # See pdfium/core/fxcrt/fx_coordinates.{h,cpp} (unfortunately, PDFium's matrix implementation is non-public)
-    # TODO add methods to apply matrix on point and rectangle
-    # - point: (x, y) -> (ax+cy+e, bx+dy+f)
-    # - rectangle: calculate transformed corner points and use min/max to find the new corners
+    # See also pdfium/core/fxcrt/fx_coordinates.{h,cpp}
+    # (unfortunately, pdfium's matrix implementation is non-public)
+    
     
     def __init__(self, a=1, b=0, c=0, d=1, e=0, f=0):
         self.set(a, b, c, d, e, f)
+    
     
     def __eq__(self, matrix):
         if type(self) is not type(matrix):
             return False
         return (self.get() == matrix.get())
+    
     
     def __repr__(self):
         return "PdfMatrix%s" % (self.get(), )
@@ -51,6 +53,7 @@ class PdfMatrix:
         """
         return (self.a, self.b, self.c, self.d, self.e, self.f)
     
+    
     def set(self, a, b, c, d, e, f):
         """
         Set the matrix values.
@@ -61,6 +64,7 @@ class PdfMatrix:
         self.d = d
         self.e = e
         self.f = f
+    
     
     def copy(self):
         """
@@ -83,6 +87,7 @@ class PdfMatrix:
             fs_matrix.e,
             fs_matrix.f,
         )
+    
     
     def to_pdfium(self):
         """
@@ -109,6 +114,7 @@ class PdfMatrix:
         )
         self.set(*new_matrix)
     
+    
     def translate(self, x, y):
         """
         Parameters:
@@ -118,6 +124,7 @@ class PdfMatrix:
         # same as self.multiply( PdfMatrix(1, 0, 0, 1, x, y) )
         self.e += x
         self.f += y
+    
     
     def scale(self, x, y):
         """
@@ -133,6 +140,7 @@ class PdfMatrix:
         self.e *= x
         self.f *= y
     
+    
     def rotate(self, angle):
         """
         Parameters:
@@ -142,6 +150,7 @@ class PdfMatrix:
         angle = (angle/180) * math.pi  # convert to radian
         c, s = math.cos(angle), math.sin(angle)
         self.multiply( PdfMatrix(c, -s, s, c) )
+    
     
     def mirror(self, vertical, horizontal):
         """
@@ -153,6 +162,7 @@ class PdfMatrix:
         s_y = (-1 if horizontal else 1)
         self.scale(s_x, s_y)
     
+    
     def skew(self, x_angle, y_angle):
         """
         Parameters:
@@ -162,3 +172,34 @@ class PdfMatrix:
         tan_a = math.tan((x_angle/180) * math.pi)
         tan_b = math.tan((y_angle/180) * math.pi)
         self.multiply( PdfMatrix(1, tan_a, tan_b, 1) )
+    
+    
+    def on_point(self, x, y):
+        """
+        Returns:
+            (float, float): Transformed point.
+        """
+        # (x, y) -> (ax+cy+e, bx+dy+f)
+        new_x = self.a*x + self.c*y + self.e
+        new_y = self.b*x + self.d*y + self.f
+        return new_x, new_y
+    
+    
+    def on_rect(self, left, bottom, right, top):
+        """
+        Returns:
+            (float, float, float, float): Transformed rectangle.
+        """
+        points = (
+            self.on_point(left, bottom),
+            self.on_point(right, bottom),
+            self.on_point(left, top),
+            self.on_point(right, top),
+        )
+        new_rect = (
+            min(p[0] for p in points),  # left
+            min(p[1] for p in points),  # bottom
+            max(p[0] for p in points),  # right
+            max(p[1] for p in points),  # top
+        )
+        return new_rect
