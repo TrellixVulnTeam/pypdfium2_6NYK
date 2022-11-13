@@ -16,6 +16,7 @@ from pypdfium2._helpers.misc import (
     RotationToConst,
     RotationToDegrees,
 )
+from pypdfium2._helpers.matrix import PdfMatrix
 from pypdfium2._helpers.bitmap import PdfBitmap
 from pypdfium2._helpers.textpage import PdfTextPage
 from pypdfium2._helpers.pageobjects import PdfObject
@@ -314,8 +315,44 @@ class PdfPage:
     
     def render_matrix(
             self,
+            matrix = PdfMatrix(),
+            crop = (0, 0, 0, 0),
+            padding = (0, 0),
+            bitmap_maker = PdfBitmap.new_native,
+            fill_color = (255, 255, 255, 255),
+            **kwargs
         ):
-        pass
+        """
+        TODO
+        """
+                
+        cl_format, rev_byteorder, flags = _parse_renderopts(
+            fill_color = fill_color,
+            color_scheme = None,
+            **kwargs
+        )
+        
+        left, bottom, right, top = matrix.on_rect(
+            crop[0],
+            crop[1],
+            self.get_width()  - crop[2],
+            self.get_height() - crop[3],
+        )
+        width  = int(right + padding[0])
+        height = int(top   + padding[1])
+        
+        bitmap = bitmap_maker(
+            width = width,
+            height = height,
+            format = cl_format,
+            rev_byteorder = rev_byteorder,
+        )
+        bitmap.fill_rect(0, 0, width, height, fill_color)
+        
+        clipping_rect = pdfium.FS_RECTF(left, top, right, bottom)
+        pdfium.FPDF_RenderPageBitmapWithMatrix(bitmap.raw, self.raw, matrix.to_pdfium(), clipping_rect, flags)
+        
+        return bitmap
     
     
     def render(
