@@ -9,6 +9,7 @@ import weakref
 from collections import namedtuple
 import pypdfium2._pypdfium as pdfium
 from pypdfium2._helpers.misc import (
+    PdfiumError,
     color_tohex,
     BitmapTypeToNChannels,
     BitmapTypeToStr,
@@ -134,6 +135,8 @@ class PdfBitmap:
             needs_free = True
             total_bytes = stride * height
             first_item = pdfium.FPDFBitmap_GetBuffer(raw)
+            if first_item.value is None:
+                raise PdfiumError("Failed to get bitmap buffer (null pointer returned)")
             buffer_ptr = ctypes.cast(first_item, ctypes.POINTER(ctypes.c_ubyte * total_bytes))
             buffer = buffer_ptr.contents
         else:

@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2022 geisserml <geisserml@gmail.com>
 # SPDX-License-Identifier: Apache-2.0 OR BSD-3-Clause
 
+import traceback
 from pathlib import Path
 import pypdfium2._namespace as pdfium
 from pypdfium2._cli._parsers import (
@@ -56,12 +57,24 @@ def main(args):
         images += list(obj_searcher)
     
     n_digits = len(str(len(images)))
+    
     for i, image in enumerate(images):
+        
         prefix = args.output_dir / ("%s_%0*d" % (args.input.stem, n_digits, i+1))
+        
         if args.use_bitmap:
             if not args.format:
                 args.format = "jpeg"
-            pil_image = image.get_bitmap(render=args.render).to_pil()
+            try:
+                pil_image = image.get_bitmap(render=args.render).to_pil()
+            except Exception:
+                traceback.print_exc()
+                continue
             pil_image.save("%s.%s" % (prefix, args.format))
+        
         else:
-            image.extract(prefix, fb_format=args.format, fb_render=args.render)
+            try:
+                image.extract(prefix, fb_format=args.format, fb_render=args.render)
+            except Exception:
+                traceback.print_exc()
+                continue
