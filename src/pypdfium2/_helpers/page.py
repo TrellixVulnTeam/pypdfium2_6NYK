@@ -326,6 +326,8 @@ class PdfPage:
         TODO
         """
         
+        # work in progress
+        
         cl_format, rev_byteorder, flags = _parse_renderopts(
             fill_color = fill_color,
             color_scheme = None,

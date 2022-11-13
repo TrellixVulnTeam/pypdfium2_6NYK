@@ -18,7 +18,8 @@ class PdfMatrix:
     Note:
         * This is a pure-python support model (independent of PDFium).
         * The PDF format uses row vectors.
-        * Transformations operate from the origin of the coordinate system.
+        * Transformations operate from the origin of the coordinate system
+          (PDF coordinates: bottom left corner, Device coordinates: top left corner).
     
     Attributes:
         a (float): Matrix value [0][0].
