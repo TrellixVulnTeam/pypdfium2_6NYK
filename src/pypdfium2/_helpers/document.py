@@ -24,6 +24,7 @@ from pypdfium2._helpers.misc import (
     is_input_buffer,
 )
 from pypdfium2._helpers.page import PdfPage
+from pypdfium2._helpers.bitmap import PdfBitmap
 from pypdfium2._helpers.xobject import PdfXObject
 from pypdfium2._helpers.attachments import PdfAttachment
 
@@ -533,22 +534,32 @@ class PdfDocument:
     
     
     @classmethod
-    def _process_page(cls, index, input_data, password, file_access, converter, renderer, **kwargs):
+    def _process_page(cls, index, input_data, password, file_access, renderer, converter, pass_info, **kwargs):
+        
         pdf = cls(
             input_data,
             password = password,
             file_access = file_access,
         )
         page = pdf.get_page(index)
-        return renderer(page, converter, **kwargs)
+        
+        bitmap = renderer(page, **kwargs)
+        info = bitmap.get_info()
+        result = converter(bitmap)
+        
+        if pass_info:
+            return result, info
+        else:
+            return result
     
     
     def render(
             self,
             converter,
+            renderer = PdfPage.render,
             page_indices = None,
             n_processes = os.cpu_count(),
-            renderer = PdfPage.render,
+            pass_info = False,
             **kwargs
         ):
         """
@@ -594,8 +605,9 @@ class PdfDocument:
             input_data = self._orig_input,
             password = self._password,
             file_access = self._file_access,
-            converter = converter,
             renderer = renderer,
+            converter = converter,
+            pass_info = pass_info,
             **kwargs
         )
         

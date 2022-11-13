@@ -320,7 +320,6 @@ class PdfPage:
     
     def render(
             self,
-            converter = None,
             scale = 1,
             rotation = 0,
             crop = (0, 0, 0, 0),
@@ -328,7 +327,6 @@ class PdfPage:
             color_scheme = None,
             draw_forms = True,
             bitmap_maker = PdfBitmap.new_native,
-            pass_info = False,
             **kwargs
         ):
         """
@@ -384,17 +382,7 @@ class PdfPage:
             if exit_formenv:
                 self.pdf.exit_formenv()
         
-        # TODO consider moving converter/pass_info to PdfDocument.render() ?
-        
-        if converter is None:
-            result = bitmap
-        else:
-            result = converter(bitmap)
-        
-        if pass_info:
-            return result, bitmap.get_info()
-        else:
-            return result
+        return bitmap
 
 
 def _auto_bitmap_format(fill_color, greyscale, prefer_bgrx):

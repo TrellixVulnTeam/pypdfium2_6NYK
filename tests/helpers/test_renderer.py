@@ -55,11 +55,10 @@ def _check_pixels(pil_image, pixels):
 )
 def test_render_page_transform(sample_page, name, crop, scale, rotation):
     pil_image = sample_page.render(
-        pdfium.PdfBitmap.to_pil,
         crop = crop,
         scale = scale,
         rotation = rotation,
-    )
+    ).to_pil()
     pil_image.save( join(OutputDir, "%s.png" % name) )
     assert pil_image.mode == "RGB"
     
@@ -98,10 +97,9 @@ def test_render_page_transform(sample_page, name, crop, scale, rotation):
 )
 def test_render_page_bgrx(rev_byteorder, sample_page):
     pil_image = sample_page.render(
-        pdfium.PdfBitmap.to_pil,
         prefer_bgrx = True,
         rev_byteorder = rev_byteorder,
-    )
+    ).to_pil()
     assert pil_image.mode == "RGBX"
     exp_pixels = [(pos, (*value, 255)) for pos, value in ExpRenderPixels]
     _check_pixels(pil_image, exp_pixels)
@@ -117,11 +115,10 @@ def test_render_page_alpha(sample_page):
         [(150, 570), (128, 0,   128, 255)],
     ]
     kwargs = dict(
-        converter = pdfium.PdfBitmap.to_pil,
         fill_color = (0, 0, 0, 0),
     )
-    image = sample_page.render(**kwargs)
-    image_rev = sample_page.render(**kwargs, rev_byteorder=True)
+    image = sample_page.render(**kwargs).to_pil()
+    image_rev = sample_page.render(**kwargs, rev_byteorder=True).to_pil()
     
     if PyVersion > (3, 6):
         assert image == image_rev
@@ -135,12 +132,11 @@ def test_render_page_alpha(sample_page):
 
 def test_render_page_grey(sample_page):
     kwargs = dict(
-        converter = pdfium.PdfBitmap.to_pil,
         greyscale = True,
         scale = 0.5,
     )
-    image = sample_page.render(**kwargs)
-    image_rev = sample_page.render(**kwargs, rev_byteorder=True)
+    image = sample_page.render(**kwargs).to_pil()
+    image_rev = sample_page.render(**kwargs, rev_byteorder=True).to_pil()
     assert image == image_rev
     assert image.size == (298, 421)
     assert image.mode == "L"
@@ -160,12 +156,11 @@ def test_render_page_grey(sample_page):
 )
 def test_render_page_fill_color(fill_color, sample_page):
     kwargs = dict(
-        converter = pdfium.PdfBitmap.to_pil,
         fill_color = fill_color,
         scale = 0.5,
     )
-    image = sample_page.render(**kwargs)
-    image_rev = sample_page.render(**kwargs, rev_byteorder=True)
+    image = sample_page.render(**kwargs).to_pil()
+    image_rev = sample_page.render(**kwargs, rev_byteorder=True).to_pil()
     
     if PyVersion > (3, 6):
         assert image == image_rev
@@ -187,11 +182,10 @@ def test_render_page_colorscheme():
         text_stroke = (255, 255, 255, 255),
     )
     image = page.render(
-        pdfium.PdfBitmap.to_pil,
         greyscale = True,
         fill_color = (0, 0, 0, 255),
         color_scheme = color_scheme,
-    )
+    ).to_pil()
     assert image.mode == "L"
     image.save( join(OutputDir, "render_colorscheme.png") )
 
@@ -201,11 +195,10 @@ def test_render_page_colorscheme():
 )
 def test_render_page_tonumpy(rev_byteorder, sample_page):
     
-    array, info = sample_page.render(
-        pdfium.PdfBitmap.to_numpy,
+    bitmap = sample_page.render(
         rev_byteorder = rev_byteorder,
-        pass_info = True,
     )
+    info, array = bitmap.get_info(), bitmap.to_numpy()
     assert isinstance(array, numpy.ndarray)
     assert isinstance(info, pdfium.PdfBitmapInfo)
     if rev_byteorder:
@@ -230,31 +223,28 @@ def test_render_page_tonumpy(rev_byteorder, sample_page):
 )
 def test_render_page_optimization(sample_page, mode):
     pil_image = sample_page.render(
-        pdfium.PdfBitmap.to_pil,
         optimize_mode = mode,
         scale = 0.5,
-    )
+    ).to_pil()
     assert isinstance(pil_image, PIL.Image.Image)
 
 
 def test_render_page_noantialias(sample_page):
     pil_image = sample_page.render(
-        pdfium.PdfBitmap.to_pil,
         no_smoothtext  = True,
         no_smoothimage = True,
         no_smoothpath  = True,
         scale = 0.5,
-    )
+    ).to_pil()
     assert isinstance(pil_image, PIL.Image.Image)
 
 
 def test_render_pages_no_concurrency(multipage_doc):
     for page in multipage_doc:
         image = page.render(
-            pdfium.PdfBitmap.to_pil,
             scale = 0.5,
             greyscale = True,
-        )
+        ).to_pil()
         assert isinstance(image, PIL.Image.Image)
 
 
@@ -395,9 +385,8 @@ def test_render_form(draw_forms, exp_color):
     
     page = pdf.get_page(0)
     image = page.render(
-        pdfium.PdfBitmap.to_pil,
         draw_forms = draw_forms,
-    )
+    ).to_pil()
     
     assert image.getpixel( (190, 190) ) == exp_color
     assert image.getpixel( (190, 430) ) == exp_color
