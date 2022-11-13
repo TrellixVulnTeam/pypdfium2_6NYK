@@ -5,14 +5,22 @@ __all__ = ["PdfObject", "PdfImage"]
 
 import ctypes
 import weakref
+from pathlib import Path
+from collections import namedtuple
 import pypdfium2._pypdfium as pdfium
 from pypdfium2._helpers.misc import (
     PdfiumError,
     get_bufaccess,
     is_input_buffer,
+    ColorspaceToStr,
 )
 from pypdfium2._helpers.matrix import PdfMatrix
 from pypdfium2._helpers.bitmap import PdfBitmap
+
+try:
+    import PIL.Image
+except ImportError:
+    PIL = None
 
 c_float = ctypes.c_float
 
@@ -135,6 +143,8 @@ class PdfObject:
             raise ValueError("*matrix* must be a PdfMatrix object.")
         pdfium.FPDFPageObj_Transform(self.raw, *matrix.get())
 
+
+# TODO consider moving PdfImage and accompanying stuff to separate file?
 
 class PdfImage (PdfObject):
     """
@@ -298,3 +308,135 @@ class PdfImage (PdfObject):
             filters.append(f)
         
         return filters
+    
+    
+    def extract(self, dest, *args, **kwargs):
+        """
+        TODO
+        """
+        
+        extraction_gen = _extract_smart(self, *args, **kwargs)
+        format = next(extraction_gen)
+        
+        close = False
+        if isinstance(dest, (str, Path)):
+            close = True
+            out_path = "%s.%s" % (dest, format)
+            buffer = open(out_path, "wb")
+        else:
+            buffer = dest
+        
+        extraction_gen.send(buffer)
+        if close:
+            buffer.close()
+
+
+ImageInfo = namedtuple("ImageInfo", "format mode metadata all_filters complex_filters")
+
+
+class ImageNotExtractableError (Exception):
+    pass
+
+
+def _get_pil_mode(colorspace, bpp):
+    # In theory, indexed (palettized) and ICC-based color spaces could be handled as well, but PDFium currently does not provide access to the palette or the ICC profile
+    if colorspace == pdfium.FPDF_COLORSPACE_DEVICEGRAY:
+        if bpp == 1:
+            return "1"
+        else:
+            return "L"
+    elif colorspace == pdfium.FPDF_COLORSPACE_DEVICERGB:
+        return "RGB"
+    elif colorspace == pdfium.FPDF_COLORSPACE_DEVICECMYK:
+        return "CMYK"
+    else:
+        return None
+
+
+def _extract_smart(image_obj, fb_format=None, fb_render=False):
+    
+    pil_image = None
+    data = None
+    info = None
+    
+    try:
+        data, info = _extract_direct(image_obj)
+    except ImageNotExtractableError:
+        pil_image = image_obj.get_bitmap(render=fb_render).to_pil()
+    else:
+        format = info.format
+        if format == "raw":
+            metadata = info.metadata
+            pil_image = PIL.Image.frombuffer(
+                info.mode,
+                (metadata.width, metadata.height),
+                image_obj.get_data(decode_simple=True),
+                "raw", info.mode, 0, 1,
+            )
+        
+    if pil_image:
+        if fb_format:
+            format = fb_format
+        elif pil_image.mode == "CMYK":
+            format = "tiff"
+        else:
+            format = "png"
+    
+    # provide format, receive buffer
+    buffer = yield format
+    
+    if pil_image:
+        pil_image.save(buffer, format=format)
+    else:
+        buffer.write(data)
+    
+    # breakpoint preventing StopIteration on send()
+    yield None
+
+
+def _extract_direct(image_obj):
+    
+    # An attempt at direct image extraction using PDFium
+    # Limited in capabilities because PDFium's public API does not expose all the required information (see https://crbug.com/pdfium/1930 for considerations)
+    
+    # Currently, this function can...
+    # - extract JPG and JPX images directly
+    # - extract the raw pixel data if there are only simple filters
+    
+    all_filters = image_obj.get_filters()
+    complex_filters = [f for f in all_filters if f not in PdfImage.SIMPLE_FILTERS]
+    metadata = image_obj.get_metadata()
+    mode = _get_pil_mode(metadata.colorspace, metadata.bits_per_pixel)
+    
+    out_data = None
+    out_format = None
+    
+    # Not sure if FlateDecode or LZWDecode data could be wrapped directly in an image file structure like PNG or TIFF
+    
+    if len(complex_filters) == 0:
+        if mode:
+            out_data = image_obj.get_data(decode_simple=True)
+            out_format = "raw"
+        else:
+            raise ImageNotExtractableError("Unhandled color space %s - don't know how to treat data" % ColorspaceToStr[metadata.colorspace])
+        
+    elif len(complex_filters) == 1:
+        f = complex_filters[0]
+        if f == "DCTDecode":
+            out_data = image_obj.get_data(decode_simple=True)
+            out_format = "jpg"
+        elif f == "JPXDecode":
+            out_data = image_obj.get_data(decode_simple=True)
+            out_format = "jp2"
+        else:
+            raise ImageNotExtractableError("Unhandled complex filter %s" % f)
+        
+        # Notes on other complex filters:
+        # CCITTFaxDecode: In theory, could be extracted directly (with a TIFF header builder like pikepdf/models/_transcoding.py:generate_ccitt_header), but PDFium doesn't tell us which CCITT group encoding it is.
+        # JBIG2Decode: In PDF, JBIG2 header info is stripped, and global segments may be stored in a separate stream. In that form, the data would probably not be of much use, except perhaps for direct re-insertion into another PDF. We're not sure if it would be possible to re-combine this into a single JBIG2 file, or if any application could use this at all. PDFium doesn't provide us with the global segments, anyway.
+        
+    else:
+        raise ImageNotExtractableError("Cannot handle multiple complex filters %s" % (complex_filters, ))
+    
+    info = ImageInfo(out_format, mode, metadata, all_filters, complex_filters)
+    return out_data, info
