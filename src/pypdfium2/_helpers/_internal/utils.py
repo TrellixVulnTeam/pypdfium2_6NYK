@@ -8,10 +8,6 @@ from pypdfium2._helpers._internal import consts
 
 
 def color_tohex(color, rev_byteorder):
-    """
-    Convert an RGBA color specified by 4 integers ranging from 0 to 255 to a single 32-bit integer as required by PDFium.
-    If using regular byte order, the output format will be ARGB. If using reversed byte order, it will be ABGR.
-    """
     
     if len(color) != 4:
         raise ValueError("Color must consist of exactly 4 values.")
@@ -36,15 +32,6 @@ def color_tohex(color, rev_byteorder):
 
 
 def get_functype(struct, funcname):
-    """
-    Parameters:
-        struct (ctypes.Structure): A structure (e. g. ``FPDF_FILEWRITE``).
-        funcname (str): Name of the callback function to implement (e. g. ``WriteBlock``).
-    Returns:
-        A :func:`ctypes.CFUNCTYPE` instance to wrap the callback function.
-        For some reason, this is not done automatically, although the information is present in the bindings file.
-        This is a convenience function to retrieve the declaration.
-    """
     return {k: v for k, v in struct._fields_}[funcname]
 
 
@@ -78,12 +65,6 @@ class _buffer_reader:
 
 
 def get_bufaccess(buffer):
-    """
-    Acquire an :class:`FPDF_FILEACCESS` interface for a byte buffer.
-    
-    Returns:
-        (FPDF_FILEACCESS, tuple): PDFium file access interface, and accompanying data that needs to be held in memory.
-    """
     
     buffer.seek(0, 2)
     file_len = buffer.tell()
@@ -100,8 +81,4 @@ def get_bufaccess(buffer):
 
 
 def is_input_buffer(buf):
-    """
-    Returns:
-        bool: True if the given object implements the methods ``seek()``, ``tell()``, ``read()``, and ``readinto()``. False otherwise.
-    """
     return all( callable(getattr(buf, a, None)) for a in ("seek", "tell", "read", "readinto") )
