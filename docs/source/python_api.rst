@@ -22,8 +22,8 @@ Page
 ****
 .. automodule:: pypdfium2._helpers.page
 
-Page Object
-***********
+Page Objects
+************
 .. automodule:: pypdfium2._helpers.pageobjects
    :show-inheritance:
 
@@ -38,6 +38,10 @@ Bitmap
 Matrix
 ******
 .. automodule:: pypdfium2._helpers.matrix
+
+Attachment
+**********
+.. automodule:: pypdfium2._helpers.attachment
 
 Miscellaneous
 *************

@@ -19,8 +19,20 @@ def _encode_key(key):
 
 class PdfAttachment:
     """
-    TODO
+    Attachment helper class.
+    See PDF 1.7, Section 7.11 "File Specifications".
+    
+    Attributes:
+        raw (FPDF_ATTACHMENT):
+            The underlying PDFium attachment handle.
+        pdf (PdfDocument):
+            Reference to the document this attachment belongs to. Must remain valid as long as the attachment is used.
     """
+    
+    # Problems with PDFium's attachment API:
+    # - https://crbug.com/pdfium/1939
+    # - https://crbug.com/pdfium/893
+    
     
     def __init__(self, raw, pdf):
         self.raw = raw
@@ -29,7 +41,8 @@ class PdfAttachment:
     
     def get_name(self):
         """
-        TODO
+        Returns:
+            str: Name of the attachment.
         """
         n_bytes = pdfium.FPDFAttachment_GetName(self.raw, None, 0)
         buffer = ctypes.create_string_buffer(n_bytes)
@@ -40,7 +53,8 @@ class PdfAttachment:
     
     def get_data(self):
         """
-        TODO
+        Returns:
+            ctypes.Array: The attachment's file data (as :class:`ctypes.c_char` array).
         """
                 
         n_bytes = ctypes.c_ulong()
@@ -63,7 +77,13 @@ class PdfAttachment:
     
     def set_data(self, data):
         """
-        TODO
+        Set the attachment's file data.
+        If this function is called on an existing attachment, it will be changed to point at the new data,
+        but the previous data will not be removed from the file (as of PDFium 5418).
+        
+        Parameters:
+            data (bytes | ctypes.Array):
+                New file data for the attachment. May be any data type that can be implicitly converted to :class:`ctypes.c_void_p`.
         """
         success = pdfium.FPDFAttachment_SetFile(self.raw, self.pdf.raw, data, len(data))
         if not success:
@@ -72,39 +92,52 @@ class PdfAttachment:
     
     def has_key(self, key):
         """
-        TODO
+        Parameters:
+            key (str | bytes):
+                A key to look for in the attachment's params dictionary, given as string or UTF-8 encoded byte string.
+        Returns:
+            bool: True if *key* is contained in the params dictionary, False otherwise.
         """
         return pdfium.FPDFAttachment_HasKey(self.raw, _encode_key(key))
     
     
     def get_value_type(self, key):
         """
-        TODO
+        Returns:
+            int: Type of the value for *key* in the params dictionary (:attr:`FPDF_OBJECT_*`).
         """
         return pdfium.FPDFAttachment_GetValueType(self.raw, _encode_key(key))
     
     
     def get_str_value(self, key):
         """
-        TODO
+        Returns:
+            str: The value of *key* in the params dictionary, if it is a string or name.
+            Otherwise, an empty string will be returned.
+            Failure to retrive a value of matching type would result in an exception.
         """
         
-        key = _encode_key(key)
-        n_bytes = pdfium.FPDFAttachment_GetStringValue(self.raw, key, None, 0)
+        enc_key = _encode_key(key)
+        n_bytes = pdfium.FPDFAttachment_GetStringValue(self.raw, enc_key, None, 0)
         if n_bytes <= 0:
             raise PdfiumError("Failed to get value of key '%s'." % (key, ))
         
         buffer = ctypes.create_string_buffer(n_bytes)
         buffer_ptr = ctypes.cast(buffer, ctypes.POINTER(pdfium.FPDF_WCHAR))
-        pdfium.FPDFAttachment_GetStringValue(self.raw, key, buffer_ptr, n_bytes)
+        pdfium.FPDFAttachment_GetStringValue(self.raw, enc_key, buffer_ptr, n_bytes)
         
         return buffer.raw[:n_bytes-2].decode("utf-16-le")
     
     
     def set_str_value(self, key, value):
         """
-        TODO
+        Set the attribute specified by *key* to the string *value*.
+        
+        Parameters:
+            value (str): New string value for the attribute.
         """
         enc_value = (value + "\x00").encode("utf-16-le")
         enc_value_ptr = ctypes.cast(enc_value, pdfium.FPDF_WIDESTRING)
-        pdfium.FPDFAttachment_SetStringValue(self.raw, _encode_key(key), enc_value_ptr)
+        success = pdfium.FPDFAttachment_SetStringValue(self.raw, _encode_key(key), enc_value_ptr)
+        if not success:
+            raise PdfiumError("Failed to set attachment param '%s' to '%s'." % (key, value))

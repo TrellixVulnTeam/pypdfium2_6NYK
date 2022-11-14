@@ -26,7 +26,7 @@ from pypdfium2._helpers.misc import (
 from pypdfium2._helpers.page import PdfPage
 from pypdfium2._helpers.bitmap import PdfBitmap
 from pypdfium2._helpers.xobject import PdfXObject
-from pypdfium2._helpers.attachments import PdfAttachment
+from pypdfium2._helpers.attachment import PdfAttachment
 
 logger = logging.getLogger(__name__)
 
@@ -280,7 +280,8 @@ class PdfDocument:
     
     def get_attachment(self, index):
         """
-        TODO
+        Returns:
+            PdfAttachment: The attachment at the given zero-based index.
         """
         raw_attachment = pdfium.FPDFDoc_GetAttachment(self.raw, index)
         if not raw_attachment:
@@ -290,9 +291,12 @@ class PdfDocument:
     
     def new_attachment(self, name):
         """
-        TODO
+        Add a new attachment of the given name to the document.
+        Note that it may appear at an arbitrary index.
+        
+        Returns:
+            PdfAttachment: Handle to the new, empty attachment.
         """
-        # NOTE new attachments may appear at an arbitrary index
         enc_name = (name + "\x00").encode("utf-16-le")
         enc_name_ptr = ctypes.cast(enc_name, pdfium.FPDF_WIDESTRING)
         raw_attachment = pdfium.FPDFDoc_AddAttachment(self.raw, enc_name_ptr)
@@ -303,7 +307,12 @@ class PdfDocument:
     
     def del_attachment(self, index):
         """
-        TODO
+        Unlink the attachment at the given zero-based index.
+        It will be hidden from the viewer, but is still present in the file (as of PDFium 5418).
+        Following attachments shift one slot to the left in the array representation used by PDFium's API.
+        
+        Handles to the attachment in question received from :meth:`.get_attachment`
+        may not be accessed anymore after this method has been called.
         """
         success = pdfium.FPDFDoc_DeleteAttachment(self.raw, index)
         if not success:
