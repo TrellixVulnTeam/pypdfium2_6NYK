@@ -160,6 +160,7 @@ class PdfDocument:
         id(form_config)
     
     
+    # TODO create separate helper class for form environment
     def init_formenv(self):
         """
         Initialise a form environment handle for this document.
@@ -214,7 +215,7 @@ class PdfDocument:
                 PDFium saving flags.
         """
         
-        # TODO share interface creation in utility function
+        # TODO share filewrite interface creation in utility function
         filewrite = pdfium.FPDF_FILEWRITE()
         filewrite.version = 1
         filewrite.WriteBlock = get_functype(pdfium.FPDF_FILEWRITE, "WriteBlock")( _buffer_writer(buffer) )
