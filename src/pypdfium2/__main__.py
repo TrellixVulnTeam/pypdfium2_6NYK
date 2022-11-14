@@ -35,6 +35,8 @@ SubCommands = {
         "Extract images from PDF pages (lossy)",
     "jpegtopdf":
         "Convert JPEG images to PDF",
+    "attachments":
+        "Work with PDF attachments",
 }
 
 def _load_modules():
