@@ -3,6 +3,7 @@
 
 from enum import Enum
 import pypdfium2._namespace as pdfium
+from pypdfium2._helpers._internal import utils, consts
 from pypdfium2._cli._parsers import (
     add_input,
     get_input,
@@ -15,7 +16,7 @@ class InfoParams (Enum):
 
 def attach(parser):
     
-    obj_types = list( pdfium.ObjectTypeToConst.keys() )
+    obj_types = list( consts.ObjectTypeToConst.keys() )
     
     add_input(parser)
     parser.add_argument(
@@ -23,7 +24,8 @@ def attach(parser):
         nargs = "+",
         metavar = "T",
         choices = obj_types,
-        help = "Object types to include. Choices: %s" % obj_types,
+        default = obj_types,
+        help = "Object types to include. Choices: %s" % (obj_types, ),
     )
     parser.add_argument(
         "--max-depth",
@@ -43,7 +45,7 @@ def attach(parser):
 def main(args):
     
     pdf = get_input(args)
-    args.filter = [pdfium.ObjectTypeToConst[t] for t in args.filter]
+    args.filter = [consts.ObjectTypeToConst[t] for t in args.filter]
     
     show_pos = (InfoParams.pos in args.info)
     show_imageinfo = (InfoParams.imageinfo in args.info)
@@ -63,7 +65,7 @@ def main(args):
             
             pad_0 = "    " * obj.level
             pad_1 = pad_0 + "    "
-            print(preamble + pad_0 + pdfium.ObjectTypeToStr[obj.type])
+            print(preamble + pad_0 + consts.ObjectTypeToStr[obj.type])
             
             if show_pos:
                 print("%sPosition: %s" % (pad_1, obj.get_pos()))
@@ -71,7 +73,7 @@ def main(args):
             if show_imageinfo and isinstance(obj, pdfium.PdfImage):
                 print("%sFilters: %s" % (pad_1, obj.get_filters()))
                 metadata = obj.get_metadata()
-                print(pdfium.image_metadata_to_str(metadata, pad=pad_1))
+                print(utils.image_metadata_to_str(metadata, pad=pad_1))
             
             count += 1
             preamble = ""
