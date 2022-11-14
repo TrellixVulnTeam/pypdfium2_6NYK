@@ -8,12 +8,12 @@ import weakref
 from pathlib import Path
 from collections import namedtuple
 import pypdfium2._pypdfium as pdfium
-from pypdfium2._helpers.misc import (
-    PdfiumError,
+from pypdfium2._helpers._utils import (
     get_bufaccess,
     is_input_buffer,
-    ColorspaceToStr,
 )
+from pypdfium2._helpers._constants import ColorspaceToStr
+from pypdfium2._helpers.misc import PdfiumError
 from pypdfium2._helpers.matrix import PdfMatrix
 from pypdfium2._helpers.bitmap import PdfBitmap
 

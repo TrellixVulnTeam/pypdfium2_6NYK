@@ -8,9 +8,9 @@ import ctypes
 import weakref
 from collections import namedtuple
 import pypdfium2._pypdfium as pdfium
-from pypdfium2._helpers.misc import (
-    PdfiumError,
-    color_tohex,
+from pypdfium2._helpers.misc import PdfiumError
+from pypdfium2._helpers._utils import color_tohex
+from pypdfium2._helpers._constants import (
     BitmapTypeToNChannels,
     BitmapTypeToStr,
     BitmapTypeToStrReverse,

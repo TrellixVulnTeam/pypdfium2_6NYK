@@ -8,13 +8,17 @@ import ctypes
 import weakref
 import logging
 import pypdfium2._pypdfium as pdfium
+from pypdfium2._helpers._utils import (
+    get_functype,
+    color_tohex,
+)
+from pypdfium2._helpers._constants import (
+    RotationToConst,
+    RotationToDegrees,
+)
 from pypdfium2._helpers.misc import (
     RenderOptimizeMode,
     PdfiumError,
-    get_functype,
-    color_tohex,
-    RotationToConst,
-    RotationToDegrees,
 )
 from pypdfium2._helpers.matrix import PdfMatrix
 from pypdfium2._helpers.bitmap import PdfBitmap
