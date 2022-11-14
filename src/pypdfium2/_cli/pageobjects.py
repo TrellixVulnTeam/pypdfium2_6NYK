@@ -4,10 +4,8 @@
 from enum import Enum
 import pypdfium2._namespace as pdfium
 from pypdfium2._helpers._internal import utils, consts
-from pypdfium2._cli._parsers import (
-    add_input,
-    get_input,
-)
+from pypdfium2._cli._parsers import add_input, get_input
+
 
 class InfoParams (Enum):
     pos = 0
@@ -18,7 +16,7 @@ def attach(parser):
     
     obj_types = list( consts.ObjectTypeToConst.keys() )
     
-    add_input(parser)
+    add_input(parser, pages=True)
     parser.add_argument(
         "--filter",
         nargs = "+",

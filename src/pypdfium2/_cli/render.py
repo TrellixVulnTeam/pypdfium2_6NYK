@@ -4,10 +4,7 @@
 import os
 from pathlib import Path
 import pypdfium2._namespace as pdfium
-from pypdfium2._cli._parsers import (
-    add_input,
-    get_input,
-)
+from pypdfium2._cli._parsers import add_input, get_input
 
 
 ColorOpts = dict(
@@ -18,7 +15,7 @@ ColorOpts = dict(
 
 
 def attach(parser):
-    add_input(parser)
+    add_input(parser, pages=True)
     parser.add_argument(
         "--output", "-o",
         type = Path,

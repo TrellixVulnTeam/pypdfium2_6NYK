@@ -5,7 +5,7 @@ from pathlib import Path
 import pypdfium2._namespace as pdfium
 
 
-def _parse_pagetext(pagetext):
+def parse_numtext(pagetext):
     
     if not pagetext:
         return None
@@ -26,7 +26,7 @@ def _parse_pagetext(pagetext):
     return indices
 
 
-def add_input_pdf(parser):
+def add_input(parser, pages=True):
     parser.add_argument(
         "input",
         type = Path,
@@ -36,31 +36,17 @@ def add_input_pdf(parser):
         "--password",
         help = "A password to unlock the PDF, if encrypted",
     )
+    if pages:
+        parser.add_argument(
+            "--pages",
+            default = None,
+            type = parse_numtext,
+            help = "Page numbers and ranges to include",
+        )
 
-def get_input_pdf(args):
-    return pdfium.PdfDocument(args.input, password=args.password)
-
-
-def add_input_pages(parser):
-    parser.add_argument(
-        "--pages",
-        default = None,
-        type = _parse_pagetext,
-        help = "Page numbers and ranges to include",
-    )
-
-def set_input_pages(args, pdf):
-    if not args.pages:
-        args.pages = [i for i in range(len(pdf))]
-
-
-# TODO consider removing add_input() / get_input() aliases
-
-def add_input(parser):
-    add_input_pdf(parser)
-    add_input_pages(parser)
 
 def get_input(args):
-    pdf = get_input_pdf(args)
-    set_input_pages(args, pdf)
+    pdf = pdfium.PdfDocument(args.input, password=args.password)
+    if "pages" in args and not args.pages:
+        args.pages = [i for i in range(len(pdf))]
     return pdf

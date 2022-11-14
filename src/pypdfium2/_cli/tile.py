@@ -4,10 +4,7 @@
 from enum import Enum
 from pathlib import Path
 import pypdfium2._namespace as pdfium
-from pypdfium2._cli._parsers import (
-    add_input_pdf,
-    get_input_pdf,
-)
+from pypdfium2._cli._parsers import add_input, get_input
 
 
 class Units (Enum):
@@ -31,7 +28,7 @@ def units_to_pt(value, unit: Units):
 
 
 def attach(parser):
-    add_input_pdf(parser)
+    add_input(parser, pages=False)
     parser.add_argument(
         "--output", "-o",
         required = True,
@@ -75,7 +72,7 @@ def main(args):
     width = units_to_pt(args.width, args.unit)
     height = units_to_pt(args.height, args.unit)
     
-    src_pdf = get_input_pdf(args)
+    src_pdf = get_input(args)
     raw_dest = pdfium.FPDF_ImportNPagesToOne(
         src_pdf.raw,
         width, height,

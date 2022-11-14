@@ -2,10 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0 OR BSD-3-Clause
 
 from enum import Enum
-from pypdfium2._cli._parsers import (
-    add_input,
-    get_input,
-)
+from pypdfium2._cli._parsers import add_input, get_input
 
 
 class ExtractionStrategy (Enum):
@@ -14,7 +11,7 @@ class ExtractionStrategy (Enum):
 
 
 def attach(parser):
-    add_input(parser)
+    add_input(parser, pages=True)
     parser.add_argument(
         "--strategy",
         type = lambda s: ExtractionStrategy[s.upper()],
