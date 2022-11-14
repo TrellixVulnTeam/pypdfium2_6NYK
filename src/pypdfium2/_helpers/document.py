@@ -198,6 +198,7 @@ class PdfDocument:
         return pdfium.FPDF_GetFormType(self.raw)
     
     
+    # TODO accept strings as well - always having to use open() manually is a bit boring
     def save(self, buffer, version=None, flags=pdfium.FPDF_NO_INCREMENTAL):
         """
         Save the document into an output buffer, at its current state.

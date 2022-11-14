@@ -373,7 +373,7 @@ def _extract_smart(image_obj, fb_format=None, fb_render=False):
                 image_obj.get_data(decode_simple=True),
                 "raw", info.mode, 0, 1,
             )
-        
+    
     if pil_image:
         if fb_format:
             format = fb_format
@@ -419,7 +419,7 @@ def _extract_direct(image_obj):
             out_format = "raw"
         else:
             raise ImageNotExtractableError("Unhandled color space %s - don't know how to treat data" % ColorspaceToStr[metadata.colorspace])
-        
+    
     elif len(complex_filters) == 1:
         f = complex_filters[0]
         if f == "DCTDecode":
@@ -434,7 +434,7 @@ def _extract_direct(image_obj):
         # Notes on other complex filters:
         # CCITTFaxDecode: In theory, could be extracted directly (with a TIFF header builder like pikepdf/models/_transcoding.py:generate_ccitt_header), but PDFium doesn't tell us which CCITT group encoding it is.
         # JBIG2Decode: In PDF, JBIG2 header info is stripped, and global segments may be stored in a separate stream. In that form, the data would probably not be of much use, except perhaps for direct re-insertion into another PDF. We're not sure if it would be possible to re-combine this into a single JBIG2 file, or if any application could use this at all. PDFium doesn't provide us with the global segments, anyway.
-        
+    
     else:
         raise ImageNotExtractableError("Cannot handle multiple complex filters %s" % (complex_filters, ))
     

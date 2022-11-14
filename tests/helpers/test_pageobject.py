@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2022 geisserml <geisserml@gmail.com>
 # SPDX-License-Identifier: Apache-2.0 OR BSD-3-Clause
 
+import io
 from os.path import (
     join,
     exists,
@@ -82,6 +83,13 @@ def test_new_jpeg():
     pil_image_2 = bitmap.to_pil()
     assert (120, 120) == pil_image_1.size == pil_image_2.size == (bitmap.width, bitmap.height)
     assert "RGB" == pil_image_1.mode == pil_image_2.mode
+    
+    in_data = TestFiles.mona_lisa.read_bytes()
+    out_buffer = io.BytesIO()
+    image_a.extract(out_buffer)
+    out_buffer.seek(0)
+    out_data = out_buffer.read()
+    assert in_data == out_data
     
     metadata = image_a.get_metadata()
     assert isinstance(metadata, pdfium.FPDF_IMAGEOBJ_METADATA)
