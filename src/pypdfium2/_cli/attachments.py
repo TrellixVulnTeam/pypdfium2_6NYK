@@ -14,11 +14,14 @@ ACTION_EDIT = "edit"
 
 # hook
 def attach(parser):
+    
     add_input(parser, pages=False)
     subparsers = parser.add_subparsers(dest="action")
+    
     parser_list = subparsers.add_parser(
         ACTION_LIST,
     )
+    
     parser_extract = subparsers.add_parser(
         ACTION_EXTRACT,
     )
@@ -31,8 +34,24 @@ def attach(parser):
         type = Path,
         required = True,
     )
+    
     parser_edit = subparsers.add_parser(
         ACTION_EDIT,
+    )
+    parser_edit.add_argument(
+        "--del-numbers", "-d",
+        type = parse_numtext,
+    )
+    parser_edit.add_argument(
+        "--add-files", "-a",
+        nargs = "+",
+        metavar = "F",
+        type = Path,
+    )
+    parser_edit.add_argument(
+        "--output", "-o",
+        type = Path,
+        required = True,
     )
 
 
@@ -59,4 +78,15 @@ def main(args):
             out_path.write_bytes( attachment.get_data() )
     
     elif args.action == ACTION_EDIT:
-        pass
+        
+        if args.del_numbers:
+            for i in sorted(args.del_numbers, reverse=True):
+                pdf.del_attachment(i)
+        
+        if args.add_files:
+            for fp in args.add_files:
+                attachment = pdf.new_attachment(fp.name)
+                attachment.set_data( fp.read_bytes() )
+        
+        with open(args.output, "wb") as buf:
+            pdf.save(buf)
