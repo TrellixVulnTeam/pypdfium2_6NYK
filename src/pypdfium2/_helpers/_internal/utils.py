@@ -1,8 +1,6 @@
 # SPDX-FileCopyrightText: 2022 geisserml <geisserml@gmail.com>
 # SPDX-License-Identifier: Apache-2.0 OR BSD-3-Clause
 
-# TODO import as namespace, rather than importing individual members
-
 import copy
 import ctypes
 import pypdfium2._pypdfium as pdfium
