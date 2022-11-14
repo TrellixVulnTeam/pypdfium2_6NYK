@@ -6,7 +6,7 @@
 import copy
 import ctypes
 import pypdfium2._pypdfium as pdfium
-from pypdfium2._helpers._constants import ColorspaceToStr
+from pypdfium2._helpers._internal import consts
 
 
 def color_tohex(color, rev_byteorder):
@@ -55,7 +55,7 @@ def get_struct_slots(struct):
 
 
 def image_metadata_to_str(metadata, pad=""):
-    imageinfo_maps = {"colorspace": ColorspaceToStr}
+    imageinfo_maps = {"colorspace": consts.ColorspaceToStr}
     as_str = ""
     nl = ""
     for attr in get_struct_slots(pdfium.FPDF_IMAGEOBJ_METADATA):

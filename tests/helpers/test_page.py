@@ -3,7 +3,7 @@
 
 import pytest
 import pypdfium2 as pdfium
-from ..conftest import TestFiles, OutputDir
+from ..conftest import TestFiles
 
 
 def test_boxes():

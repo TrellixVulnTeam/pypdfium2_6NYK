@@ -8,14 +8,10 @@ import weakref
 from pathlib import Path
 from collections import namedtuple
 import pypdfium2._pypdfium as pdfium
-from pypdfium2._helpers._utils import (
-    get_bufaccess,
-    is_input_buffer,
-)
-from pypdfium2._helpers._constants import ColorspaceToStr
 from pypdfium2._helpers.misc import PdfiumError
 from pypdfium2._helpers.matrix import PdfMatrix
 from pypdfium2._helpers.bitmap import PdfBitmap
+from pypdfium2._helpers._internal import consts, utils
 
 try:
     import PIL.Image
@@ -197,10 +193,10 @@ class PdfImage (PdfObject):
                 Whether the buffer should be automatically closed once it is not needed anymore.
         """
         
-        if not is_input_buffer(buffer):
+        if not utils.is_input_buffer(buffer):
             raise ValueError("This is not a compatible buffer: %s" % buffer)
         
-        bufaccess, ld_data = get_bufaccess(buffer)
+        bufaccess, ld_data = utils.get_bufaccess(buffer)
         
         if inline:
             loader = pdfium.FPDFImageObj_LoadJpegFileInline
@@ -418,7 +414,9 @@ def _extract_direct(image_obj):
             out_data = image_obj.get_data(decode_simple=True)
             out_format = "raw"
         else:
-            raise ImageNotExtractableError("Unhandled color space %s - don't know how to treat data" % ColorspaceToStr[metadata.colorspace])
+            raise ImageNotExtractableError(
+                "Unhandled color space %s - don't know how to treat data" % (consts.ColorspaceToStr[metadata.colorspace], )
+            )
     
     elif len(complex_filters) == 1:
         f = complex_filters[0]

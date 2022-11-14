@@ -9,12 +9,7 @@ import weakref
 from collections import namedtuple
 import pypdfium2._pypdfium as pdfium
 from pypdfium2._helpers.misc import PdfiumError
-from pypdfium2._helpers._utils import color_tohex
-from pypdfium2._helpers._constants import (
-    BitmapTypeToNChannels,
-    BitmapTypeToStr,
-    BitmapTypeToStrReverse,
-)
+from pypdfium2._helpers._internal import consts, utils
 
 logger = logging.getLogger(__name__)
 
@@ -81,11 +76,11 @@ class PdfBitmap:
         self.stride = stride
         self.format = format
         self.rev_byteorder = rev_byteorder
-        self.n_channels = BitmapTypeToNChannels[self.format]
+        self.n_channels = consts.BitmapTypeToNChannels[self.format]
         if self.rev_byteorder:
-            self.mode = BitmapTypeToStrReverse[self.format]
+            self.mode = consts.BitmapTypeToStrReverse[self.format]
         else:
-            self.mode = BitmapTypeToStr[self.format]
+            self.mode = consts.BitmapTypeToStr[self.format]
         
         self._finalizer = None
         if needs_free:
@@ -164,7 +159,7 @@ class PdfBitmap:
         Bitmaps created by this function are always packed (no unused bytes at line end).
         """
         
-        stride = width * BitmapTypeToNChannels[format]
+        stride = width * consts.BitmapTypeToNChannels[format]
         total_bytes = stride * height
         buffer = (ctypes.c_ubyte * total_bytes)()
         raw = pdfium.FPDFBitmap_CreateEx(width, height, format, buffer, stride)
@@ -189,7 +184,7 @@ class PdfBitmap:
         """
         
         if force_packed:
-            stride = width * BitmapTypeToNChannels[format]
+            stride = width * consts.BitmapTypeToNChannels[format]
         else:
             stride = 0
         
@@ -226,7 +221,7 @@ class PdfBitmap:
             color (typing.Tuple[int, int, int, int]):
                 RGBA fill color (a tuple of 4 integers ranging from 0 to 255).
         """
-        c_color = color_tohex(color, self.rev_byteorder)
+        c_color = utils.color_tohex(color, self.rev_byteorder)
         pdfium.FPDFBitmap_FillRect(self.raw, left, top, width, height, c_color)
     
     
@@ -288,7 +283,7 @@ class PdfBitmap:
             raise RuntimeError("Pillow library needs to be installed for to_pil() converter.")
         
         src_mode = self.mode
-        dest_mode = BitmapTypeToStrReverse[self.format]
+        dest_mode = consts.BitmapTypeToStrReverse[self.format]
         
         image = PIL.Image.frombuffer(
             dest_mode,                  # target color format

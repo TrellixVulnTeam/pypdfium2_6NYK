@@ -7,6 +7,8 @@
 import pypdfium2._pypdfium as pdfium
 
 
+# NOTE FPDFBitmap_Unknown deliberately not handled
+
 #: Get the number of channels for a PDFium bitmap format constant.
 BitmapTypeToNChannels = {
     pdfium.FPDFBitmap_Gray: 1,

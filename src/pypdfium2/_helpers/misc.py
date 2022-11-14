@@ -1,6 +1,10 @@
 # SPDX-FileCopyrightText: 2022 geisserml <geisserml@gmail.com>
 # SPDX-License-Identifier: Apache-2.0 OR BSD-3-Clause
 
+# FIXME non-prefixed public members
+
+__all__ = ["PdfiumError", "FileAccessMode", "RenderOptimizeMode"]
+
 import enum
 
 
@@ -8,8 +12,6 @@ class PdfiumError (RuntimeError):
     """ An exception from the PDFium library, detected by function return code. """
     pass
 
-
-# FIXME non-prefixed public members
 
 class FileAccessMode (enum.Enum):
     """ File access modes. """

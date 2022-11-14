@@ -14,23 +14,14 @@ from collections import namedtuple
 from concurrent.futures import ProcessPoolExecutor
 
 import pypdfium2._pypdfium as pdfium
-from pypdfium2._helpers._constants import (
-    ErrorToStr,
-    ViewmodeToStr,
-)
-from pypdfium2._helpers._utils import (
-    get_functype,
-    get_bufaccess,
-    is_input_buffer,
-)
 from pypdfium2._helpers.misc import (
     FileAccessMode,
     PdfiumError,
 )
 from pypdfium2._helpers.page import PdfPage
-from pypdfium2._helpers.bitmap import PdfBitmap
 from pypdfium2._helpers.xobject import PdfXObject
 from pypdfium2._helpers.attachment import PdfAttachment
+from pypdfium2._helpers._internal import consts, utils
 
 logger = logging.getLogger(__name__)
 
@@ -222,7 +213,7 @@ class PdfDocument:
         # TODO share filewrite interface creation in utility function
         filewrite = pdfium.FPDF_FILEWRITE()
         filewrite.version = 1
-        filewrite.WriteBlock = get_functype(pdfium.FPDF_FILEWRITE, "WriteBlock")( _buffer_writer(buffer) )
+        filewrite.WriteBlock = utils.get_functype(pdfium.FPDF_FILEWRITE, "WriteBlock")( _buffer_writer(buffer) )
         
         saveargs = (self.raw, filewrite, flags)
         if version is None:
@@ -542,7 +533,7 @@ class PdfDocument:
                 "    " * item.level +
                 "[%s] %s -> %s  # %s %s" % (
                     state, item.title, target,
-                    ViewmodeToStr[item.view_mode],
+                    consts.ViewmodeToStr[item.view_mode],
                     [round(c, n_digits) for c in item.view_pos],
                 )
             )
@@ -603,7 +594,7 @@ class PdfDocument:
         
         if isinstance(self._orig_input, pdfium.FPDF_DOCUMENT):
             raise ValueError("Cannot render in parallel without input sources.")
-        elif is_input_buffer(self._orig_input):
+        elif utils.is_input_buffer(self._orig_input):
             raise ValueError("Cannot render in parallel with buffer input.")
         
         n_pages = len(self)
@@ -640,8 +631,8 @@ def _open_pdf(input_data, password, autoclose):
     
     if isinstance(input_data, str):
         pdf = pdfium.FPDF_LoadDocument(input_data.encode("utf-8"), password)
-    elif is_input_buffer(input_data):
-        bufaccess, to_hold = get_bufaccess(input_data)
+    elif utils.is_input_buffer(input_data):
+        bufaccess, to_hold = utils.get_bufaccess(input_data)
         if autoclose:
             to_close = (input_data, )
         pdf = pdfium.FPDF_LoadCustomDocument(bufaccess, password)
@@ -653,7 +644,7 @@ def _open_pdf(input_data, password, autoclose):
     
     if pdfium.FPDF_GetPageCount(pdf) < 1:
         err_code = pdfium.FPDF_GetLastError()
-        pdfium_msg = ErrorToStr.get(err_code, "Error code %s" % err_code)
+        pdfium_msg = consts.ErrorToStr.get(err_code, "Error code %s" % err_code)
         raise PdfiumError("Failed to load document (PDFium: %s)." % pdfium_msg)
     
     return pdf, to_hold, to_close
